@@ -1,11 +1,15 @@
-import React from 'react'
-function App() {
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Checker from './pages/Checker';
 
+function App() {
   return (
-   <div className="flex justify-center items-center h-screen bg-gray-100">
-    <p className="text-2xl font-bold text-red-500">Hi checker</p>
-   </div>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<Checker />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
