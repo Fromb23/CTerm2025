@@ -7,76 +7,76 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Light Theme (default) - Updated to standard system colors */
+  /* Light Theme - Maroon dominant */
   --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f8fafc;
-  --color-bg-accent: #3b82f6; 
-  --color-bg-accent-dark: #2563eb; 
+  --color-bg-secondary: #fef7f7;
+  --color-bg-accent: #4d0202; 
+  --color-bg-accent-dark: #3d0101; 
   --color-bg-card: #ffffff;
   
-  --color-text-primary: #1e293b; 
-  --color-text-secondary: #64748b;
-  --color-text-accent: #3b82f6; 
+  --color-text-primary: #2d1b1b; 
+  --color-text-secondary: #8b5a5a;
+  --color-text-accent: #4d0202; 
   --color-text-on-accent: #ffffff;
 
-  --color-border-primary: #e2e8f0; 
-  --color-border-secondary: #cbd5e1;
-  --color-border-accent: #3b82f6;
+  --color-border-primary: #f1e8e8; 
+  --color-border-secondary: #e5d5d5;
+  --color-border-accent: #4d0202;
 
-  --color-button-primary: #3b82f6; 
-  --color-button-primary-hover: #2563eb; 
+  --color-button-primary: #4d0202; 
+  --color-button-primary-hover: #3d0101; 
   --color-button-secondary: #ffffff;
-  --color-button-secondary-hover: #f1f5f9; 
-  --color-button-destructive: #ef4444;
-  --color-button-destructive-hover: #dc2626;
+  --color-button-secondary-hover: #fef7f7; 
+  --color-button-destructive: #dc2626;
+  --color-button-destructive-hover: #b91c1c;
   
-  --color-icon-primary: #64748b;
-  --color-icon-secondary: #94a3b8;
-  --color-icon-accent: #3b82f6;
-  --color-icon-dark: #1e293b;
+  --color-icon-primary: #8b5a5a;
+  --color-icon-secondary: #b87c7c;
+  --color-icon-accent: #4d0202;
+  --color-icon-dark: #2d1b1b;
   
-  --color-shadow: rgba(0, 0, 0, 0.08);
-  --color-shadow-lg: rgba(0, 0, 0, 0.1);
+  --color-shadow: rgba(77, 2, 2, 0.08);
+  --color-shadow-lg: rgba(77, 2, 2, 0.12);
   
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  --color-success: #166534;
+  --color-warning: #ca8a04;
+  --color-error: #dc2626;
 }
 
 .dark {
-  /* Dark Theme (slightly improved) */
-  --color-bg-primary: #0f172a;
-  --color-bg-secondary: #1e293b;
-  --color-bg-accent: #1e40af; 
-  --color-bg-accent-dark: #1e3a8a;
-  --color-bg-card: #1e293b;
+  /* Dark Theme - Maroon adapted for dark mode */
+  --color-bg-primary: #0f0303;
+  --color-bg-secondary: #1c0707;
+  --color-bg-accent: #8b2424; 
+  --color-bg-accent-dark: #6b1c1c;
+  --color-bg-card: #1c0707;
   
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #94a3b8;
-  --color-text-accent: #60a5fa;
+  --color-text-primary: #fef7f7;
+  --color-text-secondary: #d4a5a5;
+  --color-text-accent: #f87171;
   --color-text-on-accent: #ffffff;
   
-  --color-border-primary: #334155;
-  --color-border-secondary: #475569;
-  --color-border-accent: #60a5fa;
+  --color-border-primary: #3d1414;
+  --color-border-secondary: #4d1a1a;
+  --color-border-accent: #f87171;
   
-  --color-button-primary: #2563eb;
-  --color-button-primary-hover: #1d4ed8;
-  --color-button-secondary: #334155;
-  --color-button-secondary-hover: #475569;
+  --color-button-primary: #8b2424;
+  --color-button-primary-hover: #a52a2a;
+  --color-button-secondary: #3d1414;
+  --color-button-secondary-hover: #4d1a1a;
   --color-button-destructive: #b91c1c;
   --color-button-destructive-hover: #991b1b;
 
-  --color-icon-primary: #94a3b8;
-  --color-icon-secondary: #64748b;
-  --color-icon-accent: #60a5fa;
-  --color-icon-dark: #1e293b;
+  --color-icon-primary: #d4a5a5;
+  --color-icon-secondary: #b87c7c;
+  --color-icon-accent: #f87171;
+  --color-icon-dark: #1c0707;
   
-  --color-shadow: rgba(0, 0, 0, 0.3);
-  --color-shadow-lg: rgba(0, 0, 0, 0.4);
+  --color-shadow: rgba(0, 0, 0, 0.4);
+  --color-shadow-lg: rgba(0, 0, 0, 0.6);
   
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
+  --color-success: #16a34a;
+  --color-warning: #eab308;
   --color-error: #ef4444;
 }
 
