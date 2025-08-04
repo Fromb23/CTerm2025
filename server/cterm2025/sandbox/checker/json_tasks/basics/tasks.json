@@ -1,0 +1,25 @@
+[
+	{
+		"name": "recursion",
+		"path": "algorithms/tasks/recursion",
+		"main": "main.py",
+		"target": "recursion.py",
+		"expected_output": "Recursion from 5:\n5\n4\n3\n2\n1\n0\n\nRecursion from 0:\n0\n\nRecursion from -1 (should print nothing):\n"
+	},
+	{
+		"name": "factorial",
+		"path": "algorithms/tasks/factorial",
+		"main": "main.py",
+		"target": "factorial.py",
+		"expected_output": "factorial(0) = 1\nfactorial(1) = 1\nfactorial(3) = 6\nfactorial(5) = 120\n"	
+	},
+	{
+	"name": "fibonacci",
+	"path": "algorithms/tasks/fibonacci",
+	"main": "main.py",
+	"target": "fibonacci.py",
+	"expected_output": "Fibonacci up to 5:\n0\n1\n1\n2\n3\n5\n\nFibonacci up to 1:\n0\n1\n\nFibonacci up to 0:\n0\n"
+}
+
+]
+

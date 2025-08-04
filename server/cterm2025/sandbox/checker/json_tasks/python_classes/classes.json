@@ -1,0 +1,9 @@
+[
+	{
+		"name": "bank_account",
+		"path": "algorithms/tasks/python_class",
+		"main": "main.py",
+		"target": "bank.py",
+		"expected_output": "=== Bank Account Class Check ===\nAccount Holder: Francis Rombo\nAccount Number: 001122\nBalance: 1200\n\nTransaction History:\n{'type': 'Deposit', 'amount': 1000, 'balance_after': 1000}\n{'type': 'Deposit', 'amount': 500, 'balance_after': 1500}\n{'type': 'Withdraw', 'amount': 300, 'balance_after': 1200}\n\nAccount Summary:\nAccount Holder: Francis Rombo\nAccount Number: 001122\nBalance: $1200\n"
+	}
+]
