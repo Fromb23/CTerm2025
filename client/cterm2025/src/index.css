@@ -1,1 +1,209 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Enable dark variant globally */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Light Theme (default) - Updated to standard system colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-accent: #3b82f6; 
+  --color-bg-accent-dark: #2563eb; 
+  --color-bg-card: #ffffff;
+  
+  --color-text-primary: #1e293b; 
+  --color-text-secondary: #64748b;
+  --color-text-accent: #3b82f6; 
+  --color-text-on-accent: #ffffff;
+
+  --color-border-primary: #e2e8f0; 
+  --color-border-secondary: #cbd5e1;
+  --color-border-accent: #3b82f6;
+
+  --color-button-primary: #3b82f6; 
+  --color-button-primary-hover: #2563eb; 
+  --color-button-secondary: #ffffff;
+  --color-button-secondary-hover: #f1f5f9; 
+  --color-button-destructive: #ef4444;
+  --color-button-destructive-hover: #dc2626;
+  
+  --color-icon-primary: #64748b;
+  --color-icon-secondary: #94a3b8;
+  --color-icon-accent: #3b82f6;
+  --color-icon-dark: #1e293b;
+  
+  --color-shadow: rgba(0, 0, 0, 0.08);
+  --color-shadow-lg: rgba(0, 0, 0, 0.1);
+  
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+
+.dark {
+  /* Dark Theme (slightly improved) */
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-bg-accent: #1e40af; 
+  --color-bg-accent-dark: #1e3a8a;
+  --color-bg-card: #1e293b;
+  
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-text-accent: #60a5fa;
+  --color-text-on-accent: #ffffff;
+  
+  --color-border-primary: #334155;
+  --color-border-secondary: #475569;
+  --color-border-accent: #60a5fa;
+  
+  --color-button-primary: #2563eb;
+  --color-button-primary-hover: #1d4ed8;
+  --color-button-secondary: #334155;
+  --color-button-secondary-hover: #475569;
+  --color-button-destructive: #b91c1c;
+  --color-button-destructive-hover: #991b1b;
+
+  --color-icon-primary: #94a3b8;
+  --color-icon-secondary: #64748b;
+  --color-icon-accent: #60a5fa;
+  --color-icon-dark: #1e293b;
+  
+  --color-shadow: rgba(0, 0, 0, 0.3);
+  --color-shadow-lg: rgba(0, 0, 0, 0.4);
+  
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+
+/* Base styles */
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* Component classes */
+.bg-primary {
+  background-color: var(--color-bg-primary);
+}
+
+.bg-secondary {
+  background-color: var(--color-bg-secondary);
+}
+
+.bg-accent {
+  background-color: var(--color-bg-accent);
+}
+
+.bg-card {
+  background-color: var(--color-bg-card);
+}
+
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-accent {
+  color: var(--color-text-accent);
+}
+
+.text-on-accent {
+  color: var(--color-text-on-accent);
+}
+
+.border-primary {
+  border-color: var(--color-border-primary);
+}
+
+.border-secondary {
+  border-color: var(--color-border-secondary);
+}
+
+.border-accent {
+  border-color: var(--color-border-accent);
+}
+
+.button-primary {
+  background-color: var(--color-button-primary);
+  color: var(--color-text-on-accent);
+}
+
+.button-primary:hover {
+  background-color: var(--color-button-primary-hover);
+}
+
+.button-secondary {
+  background-color: var(--color-button-secondary);
+  border: 1px solid var(--color-border-primary);
+  color: var(--color-text-primary);
+}
+
+.button-secondary:hover {
+  background-color: var(--color-button-secondary-hover);
+}
+
+.button-destructive {
+  background-color: var(--color-button-destructive);
+  color: white;
+}
+
+.button-destructive:hover {
+  background-color: var(--color-button-destructive-hover);
+}
+
+.icon-primary {
+  color: var(--color-icon-primary);
+}
+
+.icon-secondary {
+  color: var(--color-icon-secondary);
+}
+
+.icon-accent {
+  color: var(--color-icon-accent);
+}
+
+.icon-dark {
+  color: var(--color-icon-dark);
+}
+
+.shadow-theme {
+  box-shadow: 0 1px 3px var(--color-shadow);
+}
+
+.shadow-theme-lg {
+  box-shadow: 0 4px 6px var(--color-shadow-lg);
+}
+
+/* Utility classes for status colors */
+.text-success {
+  color: var(--color-success);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+.bg-success {
+  background-color: var(--color-success);
+}
+
+.bg-warning {
+  background-color: var(--color-warning);
+}
+
+.bg-error {
+  background-color: var(--color-error);
+}
