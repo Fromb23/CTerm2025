@@ -4,26 +4,28 @@ from user.models import Role, CustomUser
 
 
 def create_admin_view(request):
-    if request.method == "POST":
-        email = request.POST.get("email")
-        full_name = request.POST.get("full_name")
-        role_id = request.POST.get("role_id")
-        password = request.POST.get("password")
-        assigned_by = request.user if request.user.is_authenticated else None
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
 
-        try:
-            role = Role.objects.get(id=role_id)
-            user = CustomUser.objects.create_admin(
-                email=email,
-                full_name=full_name,
-                role=role,
-                password=password,
-                assigned_by=assigned_by
-            )
-            return JsonResponse({"status": "success", "user_id": str(user.id)})
-        except Role.DoesNotExist:
-            return JsonResponse({"status": "error", "message": "Role not found"}, status=400)
-    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+    email = request.POST.get("email")
+    full_name = request.POST.get("full_name")
+    role_id = request.POST.get("role_id")
+    password = request.POST.get("password")
+    assigned_by = request.user if request.user.is_authenticated else None
+
+    try:
+        role = Role.objects.get(id=role_id)
+    except Role.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Role not found"}, status=400)
+
+    user = CustomUser.objects.create_admin(
+        email=email,
+        full_name=full_name,
+        role=role,
+        password=password,
+        assigned_by=assigned_by
+    )
+    return JsonResponse({"status": "success", "user_id": str(user.id)})
 
 
 def list_admins_view(request):
@@ -41,27 +43,38 @@ def list_admins_view(request):
     return JsonResponse(data, safe=False)
 
 
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.views.decorators.http import require_http_methods
+
+@require_http_methods(["PUT", "PATCH"])
 def update_admin_view(request, admin_id):
-    if request.method == "POST":
-        admin = get_object_or_404(CustomUser, id=admin_id, role__name="Admin")
-        admin.email = request.POST.get("email", admin.email)
-        admin.full_name = request.POST.get("full_name", admin.full_name)
+    try:
+        admin = CustomUser.objects.get(id=admin_id, role__name="Admin")
+    except CustomUser.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Admin not found"}, status=404)
 
-        role_id = request.POST.get("role_id")
-        if role_id:
-            try:
-                role = Role.objects.get(id=role_id)
-                admin.role = role
-            except Role.DoesNotExist:
-                return JsonResponse({"status": "error", "message": "Role not found"}, status=400)
+    email = request.POST.get("email", admin.email)
+    full_name = request.POST.get("full_name", admin.full_name)
 
-        password = request.POST.get("password")
-        if password:
-            admin.set_password(password)
+    role_id = request.POST.get("role_id")
+    if role_id:
+        try:
+            role = Role.objects.get(id=role_id)
+            admin.role = role
+        except Role.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Role not found"}, status=400)
 
-        admin.save()
-        return JsonResponse({"status": "success", "message": "Admin updated successfully"})
-    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+    password = request.POST.get("password")
+    if password:
+        admin.set_password(password)
+
+    admin.email = email
+    admin.full_name = full_name.strip()
+
+    admin.save()
+
+    return JsonResponse({"status": "success", "message": "Admin updated successfully"})
 
 
 def delete_admin_view(request, admin_id):
