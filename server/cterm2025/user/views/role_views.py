@@ -46,25 +46,27 @@ def list_roles_view(request):
 @csrf_exempt
 @require_http_methods(["PUT", "PATCH"])
 def update_role_view(request, role_id):
-    """
-    Update role details.
-    """
     try:
         data = json.loads(request.body.decode("utf-8"))
-        try:
-            role = Role.objects.get(id=role_id)
-        except Role.DoesNotExist:
-            return JsonResponse({"status": "error", "message": "Role not found"}, status=404)
-
-        role.name = data.get("name", role.name)
-        role.description = data.get("description", role.description)
-        role.permissions = data.get("permissions", role.permissions)
-
-        role.save()
-        return JsonResponse({"status": "success", "message": "Role updated"})
     except json.JSONDecodeError:
         return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
 
+    try:
+        role = Role.objects.get(id=role_id)
+    except Role.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Role not found"}, status=404)
+
+    role.name = data.get("name", role.name).strip()
+    role.description = data.get("description", role.description)
+    permissions = data.get("permissions", role.permissions)
+
+    if not isinstance(permissions, dict):
+        return JsonResponse({"status": "error", "message": "Invalid permissions format, must be JSON object"}, status=400)
+
+    role.permissions = permissions
+    role.save()
+
+    return JsonResponse({"status": "success", "message": "Role updated"})
 
 @csrf_exempt
 @require_http_methods(["DELETE"])
