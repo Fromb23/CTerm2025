@@ -7,7 +7,6 @@ from .role_views import (
 
 from .student_views import (
     create_student_view,
-    list_students_view,
     update_student_view,
     delete_student_view
 )
