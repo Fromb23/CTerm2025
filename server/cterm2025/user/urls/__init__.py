@@ -9,3 +9,15 @@ urlpatterns = [
     path("students/", include((student_patterns, "students"))),
     path("admins/", include((admin_patterns, "admins"))),
 ]
+
+from .error_handlers import (
+    custom_bad_request,
+    custom_permission_denied,
+    custom_page_not_found,
+    custom_server_error,
+)
+
+handler400 = custom_bad_request
+handler403 = custom_permission_denied
+handler404 = custom_page_not_found
+handler500 = custom_server_error
