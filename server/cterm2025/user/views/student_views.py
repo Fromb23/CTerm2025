@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
-from user.models import CustomUser, StudentProfile
+from user.models.user_models import CustomUser, StudentProfile
 
 
 @csrf_exempt

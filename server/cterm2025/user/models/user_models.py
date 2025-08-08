@@ -1,32 +1,9 @@
-# core/models.py
 import uuid
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models, transaction
 from django.utils import timezone
 from django.core.validators import MinLengthValidator
-
-
-class UserType(models.TextChoices):
-    STUDENT = 'student', 'Student'
-    ADMIN = 'admin', 'Admin'
-
-
-class Role(models.Model):
-    """
-    Role model for admin users with specific permissions.
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-    permissions = models.JSONField(default=dict)  # Expected: { "can_create": True, "can_edit": False }
-
-    class Meta:
-        ordering = ['name']
-        verbose_name = 'Role'
-        verbose_name_plural = 'Roles'
-
-    def __str__(self):
-        return self.name
+from .role_models import UserType, Role
 
 
 class CustomUserManager(BaseUserManager):
@@ -75,7 +52,7 @@ class CustomUserManager(BaseUserManager):
         return user
 
 
-class CustomUser(AbstractBaseUser, PermissionsMixin):
+class CustomUser(AbstractBaseUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=255, validators=[MinLengthValidator(2)])

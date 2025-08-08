@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from user.models import Role, CustomUser
+from user.models.user_models import CustomUser
+from user.models.role_models import Role
 
 
 def create_admin_view(request):

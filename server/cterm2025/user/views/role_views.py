@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
-from user.models import Role
+from user.models.role_models import Role
 
 
 @csrf_exempt
