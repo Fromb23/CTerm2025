@@ -153,7 +153,6 @@ class AdminProfile(models.Model):
         blank=True,
         related_name='admins'
     )
-    is_super_admin = models.BooleanField(default=False)
     custom_permissions = models.JSONField(default=dict) 
     
     created_at = models.DateTimeField(default=timezone.now)
