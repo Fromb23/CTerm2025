@@ -1,5 +1,3 @@
-# Import and expose only the functions/classes you want available at the package level
-
 from .role_views import (
     create_role_view,
     list_roles_view,
