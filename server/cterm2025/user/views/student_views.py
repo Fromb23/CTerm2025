@@ -24,15 +24,30 @@ def create_student_view(request):
 
     if CustomUser.objects.filter(email=email).exists():
         return JsonResponse({"error": "Email already in use"}, status=400)
+    
+    current_level = request.POST.get("current_level", "")
+    education_background = request.POST.get("education_background", "")
+    career_goals = request.POST.get("career_goals", "")
+    skills = request.POST.get("skills", "")
+    # timezone = request.POST.get("timezone", "")
+    preferred_language = request.POST.get("preferred_language", "")
 
     try:
         user = CustomUser.objects.create(
             email=email,
             full_name=full_name,
             password=make_password(password),
-            role="student"
+            # role="student"
         )
-        StudentProfile.objects.create(user=user)
+        StudentProfile.objects.create(
+            user=user,
+            current_level=current_level,
+            education_background=education_background,
+            career_goals=career_goals,
+            skills=skills,
+            # timezone=timezone,
+            preferred_language=preferred_language
+        )
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
