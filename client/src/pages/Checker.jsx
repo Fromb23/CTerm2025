@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Form from '../components/ui/Form';
 
 const Checker = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -74,6 +75,14 @@ const Checker = () => {
           </div>
         </div>
       </section>
+      {/* Form Section */}
+<section className="container mx-auto px-6 pb-16">
+  <div className="max-w-xl mx-auto bg-card p-6 rounded-lg shadow-theme-md">
+    <h2 className="text-2xl font-semibold text-accent mb-4">Try It Out</h2>
+    <Form />
+  </div>
+</section>
+
 
       {/* Footer */}
       <footer className="bg-secondary py-8 border-t border-primary">
