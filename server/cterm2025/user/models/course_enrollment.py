@@ -4,6 +4,7 @@ from django.utils import timezone
 
 class CourseEnrollment(models.Model):
     STATUS_CHOICES = [
+        ('pending', 'Pending'),
         ('active', 'Active'),
         ('paused', 'Paused'),
         ('completed', 'Completed'),
@@ -11,10 +12,10 @@ class CourseEnrollment(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         'CustomUser', 
         on_delete=models.CASCADE,
-        related_name='course_enrollments'
+        related_name='course_enrollment'
     )
     course = models.ForeignKey(
         'Course', 
@@ -29,7 +30,6 @@ class CourseEnrollment(models.Model):
     completion_percentage = models.FloatField(default=0.0)
 
     class Meta:
-        unique_together = ('user', 'course')
         ordering = ['-enrolled_on']
 
     def __str__(self):
