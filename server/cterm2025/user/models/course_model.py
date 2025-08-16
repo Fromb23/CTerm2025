@@ -98,6 +98,23 @@ class SubTopic(models.Model):
     def __str__(self):
         return f"{self.topic.name} - {self.name}"
 
+class Project(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    start_date = models.DateField()
+    end_date = models.DateField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    sprint = models.ForeignKey(Sprint, on_delete=models.CASCADE, related_name="projects")
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["start_date"]
+
+    def __str__(self):
+        return f"{self.name} - {self.start_date.strftime('%Y-%m-%d')}  - {self.end_date.strftime('%Y-%m-%d') if self.end_date else 'Ongoing'}"
+
 class Task(models.Model):
     TASK_TYPES = [
         ("quiz", "Quiz"),
@@ -123,6 +140,7 @@ class Task(models.Model):
     first_deadline = models.DateTimeField()
     second_deadline = models.DateTimeField(blank=True, null=True)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="tasks", null=True, blank=True)
+    project = models.ForeignKey(Project, related_name="tasks", on_delete=models.CASCADE)
     third_deadline = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
@@ -133,25 +151,7 @@ class Task(models.Model):
     def __str__(self):
         return f"{self.topic.title} - {self.name} ({self.get_task_type_display()})"
 
-
-class Project(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    start_date = models.DateField()
-    end_date = models.DateField(blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-    sprint = models.ForeignKey(Sprint, on_delete=models.CASCADE, related_name="projects")
-    tasks = models.ForeignKey(Task, related_name="projects", on_delete=models.CASCADE)
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["start_date"]
-
-    def __str__(self):
-        return "f{self.name} - {self.start_date.strftime('%Y-%m-%d')}  - {self.end_date.strftime('%Y-%m-%d') if self.end_date else 'Ongoing'}"
-    
+  
 class Quiz(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
