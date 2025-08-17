@@ -6,204 +6,158 @@
 /* Enable dark variant globally */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* =====================
+   Root Theme Variables
+   ===================== */
 :root {
-  /* Light Theme - Maroon dominant */
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #fef7f7;
-  --color-bg-accent: #4d0202; 
-  --color-bg-accent-dark: #3d0101; 
-  --color-bg-card: #ffffff;
+  /* --- Base Colors --- */
+  --color-bg-primary: #f3e4e4;          /* Light background */
+  --color-bg-secondary: #d3d3e0;        /* Slightly off-white */
+  --color-bg-card: #ffffff;             /* Cards & panels */
+  --color-bg-accent: #090921;           /* Deep navy accent for contrast */
+  --color-bg-accent-dark: #050511;      /* Darker shade for hover */
   
-  --color-text-primary: #2d1b1b; 
-  --color-text-secondary: #8b5a5a;
-  --color-text-accent: #4d0202; 
-  --color-text-on-accent: #ffffff;
+  --color-text-primary: #1a1a2e;        /* Dark text for readability */
+  --color-text-secondary: #4b4b6b;      /* Secondary text */
+  --color-text-accent: #090921;         /* Accent text */
+  --color-text-on-accent: #ffffff;      /* Text on accent bg */
+  
+  --color-border-primary: #e0e0f0;
+  --color-border-secondary: #d0d0e0;
+  --color-border-accent: #090921;
 
-  --color-border-primary: #f1e8e8; 
-  --color-border-secondary: #e5d5d5;
-  --color-border-accent: #4d0202;
+  --color-shadow: rgba(9, 9, 33, 0.08);
+  --color-shadow-lg: rgba(9, 9, 33, 0.15);
 
-  --color-button-primary: #4d0202; 
-  --color-button-primary-hover: #3d0101; 
-  --color-button-secondary: #ffffff;
-  --color-button-secondary-hover: #fef7f7; 
-  --color-button-destructive: #dc2626;
-  --color-button-destructive-hover: #b91c1c;
-  
-  --color-icon-primary: #8b5a5a;
-  --color-icon-secondary: #b87c7c;
-  --color-icon-accent: #4d0202;
-  --color-icon-dark: #2d1b1b;
-  
-  --color-shadow: rgba(77, 2, 2, 0.08);
-  --color-shadow-lg: rgba(77, 2, 2, 0.12);
-  
-  --color-success: #166534;
-  --color-warning: #ca8a04;
-  --color-error: #dc2626;
+  /* --- Button Variants --- */
+  --btn-primary: #090921;
+  --btn-primary-hover: #050511;
+  --btn-secondary: #ffffff;
+  --btn-secondary-hover: #f0f0ff;
+  --btn-destructive: #dc2626;
+  --btn-destructive-hover: #b91c1c;
+  --btn-outline: transparent;
+
+  /* --- Status Colors --- */
+  --status-success: #16a34a;
+  --status-warning: #f59e0b;
+  --status-error: #dc2626;
+  --status-pending: #fbbf24;
+  --status-info: #3b82f6;
+  --status-default: #6b7280; /* gray for neutral/waiting */
 }
 
+/* =====================
+   Dark Theme Overrides
+   ===================== */
 .dark {
-  /* Dark Theme - Maroon adapted for dark mode */
-  --color-bg-primary: #0f0303;
-  --color-bg-secondary: #1c0707;
-  --color-bg-accent: #8b2424; 
-  --color-bg-accent-dark: #6b1c1c;
-  --color-bg-card: #1c0707;
+  --color-bg-primary: #090921;         /* Dominant dark background */
+  --color-bg-secondary: #0f0f3a;       /* Slightly lighter section */
+  --color-bg-card: #0d0d33;            /* Card background */
+  --color-bg-accent: #3b82f6;           /* Bright accent for dark mode */
+  --color-bg-accent-dark: #2563eb;      /* Hover variant */
   
-  --color-text-primary: #fef7f7;
-  --color-text-secondary: #d4a5a5;
-  --color-text-accent: #f87171;
-  --color-text-on-accent: #ffffff;
-  
-  --color-border-primary: #3d1414;
-  --color-border-secondary: #4d1a1a;
-  --color-border-accent: #f87171;
-  
-  --color-button-primary: #8b2424;
-  --color-button-primary-hover: #a52a2a;
-  --color-button-secondary: #3d1414;
-  --color-button-secondary-hover: #4d1a1a;
-  --color-button-destructive: #b91c1c;
-  --color-button-destructive-hover: #991b1b;
+  --color-text-primary: #f5f5f5;        /* Light text for contrast */
+  --color-text-secondary: #c0c0ff;      /* Secondary text */
+  --color-text-accent: #3b82f6;         /* Accent text */
+  --color-text-on-accent: #ffffff;      /* Text on accent bg */
 
-  --color-icon-primary: #d4a5a5;
-  --color-icon-secondary: #b87c7c;
-  --color-icon-accent: #f87171;
-  --color-icon-dark: #1c0707;
-  
-  --color-shadow: rgba(0, 0, 0, 0.4);
-  --color-shadow-lg: rgba(0, 0, 0, 0.6);
-  
-  --color-success: #16a34a;
-  --color-warning: #eab308;
-  --color-error: #ef4444;
+  --color-border-primary: #1a1a3d;
+  --color-border-secondary: #2a2a5a;
+  --color-border-accent: #3b82f6;
+
+  --color-shadow: rgba(0,0,0,0.4);
+  --color-shadow-lg: rgba(0,0,0,0.6);
+
+  --btn-primary: #3b82f6;
+  --btn-primary-hover: #2563eb;
+  --btn-secondary: #1a1a3d;
+  --btn-secondary-hover: #2a2a5a;
+  --btn-destructive: #ef4444;
+  --btn-destructive-hover: #dc2626;
+
+  --status-success: #22c55e;
+  --status-warning: #facc15;
+  --status-error: #f87171;
+  --status-pending: #fbbf24;
+  --status-info: #60a5fa;
+  --status-default: #9ca3af;
 }
 
-/* Base styles */
+/* =====================
+   Base Styles
+   ===================== */
 body {
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
 }
 
-/* Component classes */
-.bg-primary {
-  background-color: var(--color-bg-primary);
-}
+/* =====================
+   Component Utilities
+   ===================== */
+/* Backgrounds */
+.bg-primary { background-color: var(--color-bg-primary); }
+.bg-secondary { background-color: var(--color-bg-secondary); }
+.bg-card { background-color: var(--color-bg-card); }
+.bg-accent { background-color: var(--color-bg-accent); }
 
-.bg-secondary {
-  background-color: var(--color-bg-secondary);
-}
+/* Text Colors */
+.text-primary { color: var(--color-text-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-accent { color: var(--color-text-accent); }
+.text-on-accent { color: var(--color-text-on-accent); }
 
-.bg-accent {
-  background-color: var(--color-bg-accent);
-}
+/* Borders */
+.border-primary { border-color: var(--color-border-primary); }
+.border-secondary { border-color: var(--color-border-secondary); }
+.border-accent { border-color: var(--color-border-accent); }
 
-.bg-card {
-  background-color: var(--color-bg-card);
-}
+/* Shadows */
+.shadow-theme { box-shadow: 0 1px 3px var(--color-shadow); }
+.shadow-theme-lg { box-shadow: 0 4px 6px var(--color-shadow-lg); }
 
-.text-primary {
-  color: var(--color-text-primary);
-}
-
-.text-secondary {
-  color: var(--color-text-secondary);
-}
-
-.text-accent {
-  color: var(--color-text-accent);
-}
-
-.text-on-accent {
-  color: var(--color-text-on-accent);
-}
-
-.border-primary {
-  border-color: var(--color-border-primary);
-}
-
-.border-secondary {
-  border-color: var(--color-border-secondary);
-}
-
-.border-accent {
-  border-color: var(--color-border-accent);
-}
-
+/* =====================
+   Buttons
+   ===================== */
 .button-primary {
-  background-color: var(--color-button-primary);
+  background-color: var(--btn-primary);
   color: var(--color-text-on-accent);
 }
-
-.button-primary:hover {
-  background-color: var(--color-button-primary-hover);
-}
+.button-primary:hover { background-color: var(--btn-primary-hover); }
 
 .button-secondary {
-  background-color: var(--color-button-secondary);
+  background-color: var(--btn-secondary);
   border: 1px solid var(--color-border-primary);
   color: var(--color-text-primary);
 }
-
-.button-secondary:hover {
-  background-color: var(--color-button-secondary-hover);
-}
+.button-secondary:hover { background-color: var(--btn-secondary-hover); }
 
 .button-destructive {
-  background-color: var(--color-button-destructive);
+  background-color: var(--btn-destructive);
   color: white;
 }
+.button-destructive:hover { background-color: var(--btn-destructive-hover); }
 
-.button-destructive:hover {
-  background-color: var(--color-button-destructive-hover);
+.button-outline {
+  background-color: var(--btn-outline);
+  border: 1px solid var(--color-border-primary);
+  color: var(--color-text-primary);
 }
+.button-outline:hover { background-color: var(--color-bg-secondary); }
 
-.icon-primary {
-  color: var(--color-icon-primary);
-}
+/* =====================
+   Status Colors (Text & Background)
+   ===================== */
+.text-success { color: var(--status-success); }
+.text-warning { color: var(--status-warning); }
+.text-error { color: var(--status-error); }
+.text-pending { color: var(--status-pending); }
+.text-info { color: var(--status-info); }
+.text-default { color: var(--status-default); }
 
-.icon-secondary {
-  color: var(--color-icon-secondary);
-}
-
-.icon-accent {
-  color: var(--color-icon-accent);
-}
-
-.icon-dark {
-  color: var(--color-icon-dark);
-}
-
-.shadow-theme {
-  box-shadow: 0 1px 3px var(--color-shadow);
-}
-
-.shadow-theme-lg {
-  box-shadow: 0 4px 6px var(--color-shadow-lg);
-}
-
-/* Utility classes for status colors */
-.text-success {
-  color: var(--color-success);
-}
-
-.text-warning {
-  color: var(--color-warning);
-}
-
-.text-error {
-  color: var(--color-error);
-}
-
-.bg-success {
-  background-color: var(--color-success);
-}
-
-.bg-warning {
-  background-color: var(--color-warning);
-}
-
-.bg-error {
-  background-color: var(--color-error);
-}
+.bg-success { background-color: var(--status-success); color: white; }
+.bg-warning { background-color: var(--status-warning); color: white; }
+.bg-error { background-color: var(--status-error); color: white; }
+.bg-pending { background-color: var(--status-pending); color: white; }
+.bg-info { background-color: var(--status-info); color: white; }
+.bg-default { background-color: var(--status-default); color: white; }
