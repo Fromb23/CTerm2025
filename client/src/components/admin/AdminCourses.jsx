@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Button from "../ui/Button";
 import Table from "../Table";
-import CourseFormModal from "./CourseFormModal";
+import CourseFormModal from "../CourseFormModal";
 
 // ------------------------ AdminCourses ------------------------
 const AdminCourses = () => {
