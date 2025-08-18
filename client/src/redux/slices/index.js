@@ -1,5 +1,8 @@
 import { combineReducers } from 'redux'
+import signupReducer from './signupSlice.js'
 
-export default combineReducers({
-  // Add your slices here
+const rootReducer = combineReducers({
+  signup: signupReducer
 })
+
+export default rootReducer
