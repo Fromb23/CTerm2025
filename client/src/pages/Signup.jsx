@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../contexts/themeContext.jsx";
 import Button from "../components/ui/Button";
@@ -15,9 +16,15 @@ import {
   FiMoon,
   FiLoader,
 } from "react-icons/fi";
-import { FaGoogle, FaGithub } from "react-icons/fa"; // OAuth icons
+import { FaGoogle, FaGithub } from "react-icons/fa";
+import { useToast } from "../contexts/toastContext";
+import { signupUser } from "../redux/actions/signupActions.js";
+import { signupState } from "../redux/slices/signupSlice";
+import Loading from "../components/ui/Loading.jsx";
 
 const Signup = () => {
+  const dispatch = useDispatch();
+  const { addToast } = useToast();
   const navigate = useNavigate();
   const { isDark, setIsDark } = useTheme();
 
@@ -26,17 +33,24 @@ const Signup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
+  const { loading, error, user } = useSelector((state) => state.signup);
+
   const [formData, setFormData] = useState({
-    name: "",
+    full_name: "",
     email: "",
     password: "",
-    confirmPassword: "",
+    current_level: "",
+    education_background: "",
+    career_goals: "",
+    skills: [],
+    preferred_language: "",
+    preferred_timezone: ""
   });
 
   // --- field configs ---
   const fields = [
     {
-      name: "name",
+      name: "full_name",
       type: "text",
       label: "Full Name",
       placeholder: "Enter your full name",
@@ -97,43 +111,52 @@ const Signup = () => {
     }
   };
 
-  // --- validation ---
-  const validateForm = () => {
+  // --- form validation ---
+  const validateForm = (data) => {
     const newErrors = {};
-    if (!formData.name.trim()) {
-      newErrors.name = "Full name is required";
+
+    if (!data.full_name?.trim()) {
+      newErrors.full_name = "Full name is required";
     }
-    if (!formData.email.trim()) {
+
+    if (!data.email?.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
       newErrors.email = "Please enter a valid email";
     }
-    if (!formData.password) {
+
+    if (!data.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
+    } else if (data.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
-    if (formData.confirmPassword !== formData.password) {
+
+    if (data.confirmPassword !== data.password) {
       newErrors.confirmPassword = "Passwords do not match";
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // --- handle submit ---
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  useEffect(() => {
+    if (user) {
+      addToast("Account created successfully!", "success");
+      navigate("/login");
+      dispatch(signupState());
+    }
+    if (error) {
+      addToast(error || "Signup failed. Please try again.", "error");
+      dispatch(signupState());
+    }
+  }, [user, error, dispatch, addToast]);
 
-    setIsLoading(true);
+  // handle submit
+  const handleSubmit = (formDataToSubmit) => {
+    if (!validateForm(formDataToSubmit)) return;
 
-    // simulate API
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    console.log("Signup Data:", formData);
-
-    setIsLoading(false);
-    navigate("/dashboard");
+    delete formDataToSubmit.confirmPassword;
+    dispatch(signupUser(formDataToSubmit));
   };
 
   // --- OAuth Handlers ---
@@ -146,6 +169,7 @@ const Signup = () => {
     console.log("GitHub signup flow triggered");
     // redirect to GitHub OAuth provider...
   };
+  if (loading) return <Loading />;
 
   return (
     <div className={`${isDark ? "dark" : ""}`}>
@@ -197,9 +221,8 @@ const Signup = () => {
                   type="submit"
                   variant="primary"
                   disabled={isLoading}
-                  className={`w-full ${
-                    isLoading ? "opacity-75 cursor-not-allowed" : "hover:scale-105 transform"
-                  } transition-all duration-200`}
+                  className={`w-full ${isLoading ? "opacity-75 cursor-not-allowed" : "hover:scale-105 transform"
+                    } transition-all duration-200`}
                 >
                   {isLoading ? (
                     <>
