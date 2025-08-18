@@ -119,17 +119,17 @@ const Sidebar = ({
 			className={`${collapsed ? "w-20" : "w-64"} bg-secondary text-primary min-h-screen shadow-theme-lg transition-all duration-300`}
 		>
 			<div className="p-4 flex justify-between items-center">
-  {/* Title shown only when sidebar is expanded */}
-  {!collapsed && <h2 className="text-lg font-bold">Navigation</h2>}
+				{/* Title shown only when sidebar is expanded */}
+				{!collapsed && <h2 className="text-lg font-bold">Navigation</h2>}
 
-  {/* Collapse/Expand Button */}
-  <button
-    onClick={() => setCollapsed(!collapsed)}
-    className="p-2 rounded hover:bg-muted"
-  >
-    {collapsed ? <FiMenu size={20} /> : <FiArrowLeft size={20} />}
-  </button>
-</div>
+				{/* Collapse/Expand Button */}
+				<button
+					onClick={() => setCollapsed(!collapsed)}
+					className="p-2 rounded hover:bg-muted"
+				>
+					{collapsed ? <FiMenu size={20} /> : <FiArrowLeft size={20} />}
+				</button>
+			</div>
 
 			<div className="px-2">
 				{role.name === "Student" && (
