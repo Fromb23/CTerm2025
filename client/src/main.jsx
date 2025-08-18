@@ -3,6 +3,7 @@ import { Provider } from 'react-redux'
 import setupStore from './redux/store/configureStore.js'
 import { createRoot } from 'react-dom/client'
 import { ThemeProvider } from './contexts/themeContext.jsx';
+import { ToastProvider } from './contexts/toastContext.jsx';
 import './index.css'
 import App from './App.jsx'
 
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store}>
       <ThemeProvider>
-        <App />
+        <ToastProvider>
+          <App />
+        </ToastProvider>
       </ThemeProvider>
     </Provider>
   </StrictMode>,
