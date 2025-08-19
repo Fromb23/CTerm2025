@@ -1,17 +1,10 @@
 from django.urls import path, include
 
-from .role_urls import urlpatterns as role_patterns
-from .student_urls import urlpatterns as student_patterns
-from .admin_urls import urlpatterns as admin_patterns
-from urls.course_urls import course_patterns
-
 urlpatterns = [
-    path("roles/", include((role_patterns, "roles"))),
-    path("students/", include((student_patterns, "students"))),
-    path("admins/", include((admin_patterns, "admins"))),
-    path("courses/", include((course_patterns, "courses"))),
+    path("users/", include("user.urls.user_urls")),
+    path("courses/", include("user.urls.course_urls")),
+	path("auth/", include("user.urls.auth.auth_urls")),
 ]
-
 from .error_handlers import (
     custom_bad_request,
     custom_permission_denied,
