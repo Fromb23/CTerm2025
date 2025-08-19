@@ -3,7 +3,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // import Checker from './pages/Checker';
 import CheckerResult from './pages/CheckerResult';
 import CheckerSubmission from './pages/CheckerSubmission';
+import ProtectedRoute from './components/ProtectedRoute';
 import Loading from './components/ui/Loading';
+import { useSelector } from 'react-redux';
+
 const Home = lazy(() => import('./pages/Home'));
 const ProgramDetail = lazy(() => import('./pages/ProgramDetail'));
 const Signup = lazy(() => import('./pages/Signup'));
@@ -15,7 +18,9 @@ const Loader = () => (
   <Loading />
 );
 
-function App() {
+const App = () => {
+  const isAuthenticated = useSelector((state) => state.login.user !== null);
+
   return (
     <Router>
       <Routes>
@@ -51,15 +56,17 @@ function App() {
             </Suspense>
           }
         />
+
         <Route
           path="/dashboard/*"
           element={
             <Suspense fallback={<Loader />}>
-              <Dashboard />
+              <ProtectedRoute isAuthenticated={isAuthenticated}>
+                <Dashboard />
+              </ProtectedRoute>
             </Suspense>
           }
         >
-          {/* Nested routes inside Dashboard */}
           <Route index element={<h1>Welcome to Dashboard</h1>} />
           <Route path="courses" element={<AdminCourses />} />
         </Route>
