@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import { useTheme } from '../contexts/themeContext.jsx';
 import Button from '../components/ui/Button';
 import Form from '../components/ui/Form';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
+import { loginUser } from '../redux/actions/loginActions.js';
+import { loginState } from '../redux/slices/loginSlice.js';
+import { useToast } from "../contexts/toastContext";
+
 import {
 	FiArrowLeft,
 	FiMail,
@@ -17,9 +22,12 @@ import {
 	FiAlertCircle,
 	FiLoader
 } from 'react-icons/fi';
+import Loading from '../components/ui/Loading.jsx';
 
 const Login = () => {
+	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const { addToast } = useToast();
 	const { isDark, setIsDark } = useTheme();
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
@@ -29,6 +37,7 @@ const Login = () => {
 		email: '',
 		password: ''
 	});
+	const { user, loading, error, isAuthenticated } = useSelector((state) => state.login);
 
 	const fields = [
 		{
@@ -68,43 +77,48 @@ const Login = () => {
 		}
 	};
 
-	const validateForm = () => {
+	const validateForm = (data) => {
 		const newErrors = {};
 
-		if (!formData.email.trim()) {
+		if (!data.email.trim()) {
 			newErrors.email = 'Email is required';
-		} else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+		} else if (!/\S+@\S+\.\S+/.test(data.email)) {
 			newErrors.email = 'Please enter a valid email';
 		}
 
-		if (!formData.password) {
+		if (!data.password) {
 			newErrors.password = 'Password is required';
 		}
 
 		setErrors(newErrors);
 		return Object.keys(newErrors).length === 0;
 	};
+	useEffect(() => {
+		if (user && isAuthenticated) {
+			addToast("Login successful!", "success");
+			navigate("/dashboard");
+		}
+		if (error) {
+			const message = typeof error === "string"
+				? error
+				: error?.detail || "Login failed. Please try again.";
+			addToast(message, "error");
+			dispatch(loginState());
+		}
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
+	}, [user, isAuthenticated, error, dispatch, addToast]);
 
-		if (!validateForm()) return;
-
-		setIsLoading(true);
-
-		// Simulate API call
-		await new Promise(resolve => setTimeout(resolve, 1500));
-
-		console.log('Login Data:', formData);
-		setIsLoading(false);
-
-		navigate('/dashboard');
-	};
+	const handleSubmit = (formData) => {
+		if (!validateForm(formData)) return;
+		dispatch(loginUser(formData));
+	}
 
 	const handleGitHubAuth = () => {
 		console.log('GitHub authentication triggered');
 		// GitHub OAuth integration would go here
 	};
+
+	if (loading) return <Loading message="Signing in..." />;
 
 	return (
 		<div className={`${isDark ? 'dark' : ''}`}>
