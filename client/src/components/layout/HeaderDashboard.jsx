@@ -12,8 +12,11 @@ import {
 } from "react-icons/fi";
 import { useTheme } from "../../contexts/themeContext.jsx";
 import Button from "../ui/Button";
+import { useDispatch } from "react-redux";
+import { logoutState } from "../../redux/slices/loginSlice.js";
 
 const HeaderDashboard = ({ onToggleSidebar, sidebarOpen }) => {
+  const dispatch = useDispatch();
   const { isDark, setIsDark } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef();
@@ -39,9 +42,12 @@ const HeaderDashboard = ({ onToggleSidebar, sidebarOpen }) => {
     }
   }, [location.pathname]);
 
+  const handleLogout = () => {
+    dispatch(logoutState());
+  };
+
   return (
     <header className="w-full bg-primary border-b border-secondary shadow-sm px-6 py-3 flex justify-between items-center">
-      {/* Left: Logo + Mobile Sidebar Toggle */}
       <div className="flex items-center space-x-2">
         <Button
           variant="ghost"
@@ -126,7 +132,7 @@ const HeaderDashboard = ({ onToggleSidebar, sidebarOpen }) => {
                   <Button
                     variant="ghost"
                     className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-red-100"
-                    onClick={() => console.log("Logout triggered")}
+                    onClick={handleLogout}
                   >
                     <FiLogOut className="mr-2" /> Logout
                   </Button>
