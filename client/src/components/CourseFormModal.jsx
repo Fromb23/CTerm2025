@@ -43,12 +43,14 @@ const CourseFormModal = ({ onClose, onSubmit }) => {
 			frequently_asked_questions: prev.frequently_asked_questions.filter((_, i) => i !== index),
 		}));
 
-	const handleSubmit = (e) => {
-		e.preventDefault();
-		onSubmit(formData);
+	const handleSubmit = (dataFromForm) => {
+		const payload = {
+			...dataFromForm,
+			frequently_asked_questions: formData.frequently_asked_questions
+		};
+		onSubmit(payload);
 		onClose();
 	};
-
 	// Fields array for Form component
 	const fields = [
 		{ label: "Course Name", name: "name", required: true },
