@@ -1,20 +1,27 @@
+import json
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.http import JsonResponse
-from user.models.user_models import CustomUser
+from user.models.user_models import CustomUser, AdminProfile
 from user.models.role_models import Role
+from django.views.decorators.http import require_http_methods
 
 @csrf_exempt
 @transaction.atomic
+@require_http_methods(["POST"])
 def create_admin_view(request):
     if request.method != "POST":
         return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
 
-    email = request.POST.get("email")
-    full_name = request.POST.get("full_name")
-    role_name = request.POST.get("role_name")
-    password = request.POST.get("password")
+    email = data.get("email")
+    full_name = data.get("full_name")
+    role_name = data.get("role_name")
+    password = data.get("password")
     assigned_by = request.user if request.user.is_authenticated else None
 
     if not role_name:
@@ -39,25 +46,19 @@ def create_admin_view(request):
         "role": role.name
     })
 
-
+@require_http_methods(["GET"])
 def list_admins_view(request):
-    admins = CustomUser.objects.filter(role__name="Admin")
-    data = [
-        {
-            "id": str(admin.id),
-            "email": admin.email,
-            "full_name": admin.full_name,
-            "role": admin.role.name if admin.role else None,
-            "assigned_by": admin.assigned_by.full_name if admin.assigned_by else None,
-        }
-        for admin in admins
-    ]
+    admins = AdminProfile.objects.select_related("user", "role").all()
+    data = []
+    for admin in admins:
+        data.append({
+            "admin_id": str(admin.user.id),
+            "email": admin.user.email,
+            "full_name": admin.user.full_name,
+            "role": admin.role.name,
+            "assigned_at": admin.created_at.isoformat()
+        })
     return JsonResponse(data, safe=False)
-
-
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_http_methods
 
 @require_http_methods(["PUT", "PATCH"])
 def update_admin_view(request, admin_id):
