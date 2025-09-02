@@ -19,6 +19,10 @@ def create_admin_view(request):
         return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
 
     email = data.get("email")
+    existing_user = CustomUser.objects.filter(email=email).first()
+    if existing_user:
+        return JsonResponse({"status": "error", "message": "User with this email already exists"}, status=400)
+
     full_name = data.get("full_name")
     role_name = data.get("role_name")
     password = data.get("password")
