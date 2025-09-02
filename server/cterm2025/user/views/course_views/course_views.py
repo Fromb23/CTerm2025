@@ -17,7 +17,10 @@ def create_course_view(request):
 
     try:
         data = json.loads(request.body.decode("utf-8"))
-        print("Data from admin", data)
+        existing_course_name = Course.objects.filter(name=data.get("name")).exists()
+        if existing_course_name:
+            return JsonResponse({"error": "Course with this name already exists"}, status=400)
+
         course = Course.objects.create(
             name=data.get("name"),
             course_code=generate_course_code(data.get("name")),
@@ -46,7 +49,7 @@ def list_courses_view(request):
     return JsonResponse({"courses": courses}, status=200)
 
 
-def get_course_view(request, course_id):
+def list_course_view(request, course_id):
     """Retrieve a single course by ID"""
     if request.method != "GET":
         return JsonResponse({"error": "Only GET method allowed"}, status=405)
@@ -100,6 +103,9 @@ def delete_course_view(request, course_id):
     if request.method != "DELETE":
         return JsonResponse({"error": "Only DELETE method allowed"}, status=405)
 
-    course = get_object_or_404(Course, id=course_id)
-    course.delete()
+    try:
+        course = Course.objects.get(id=course_id)
+        course.delete()
+    except Course.DoesNotExist:
+        return JsonResponse({"status": "Course not found"}, status=404)
     return JsonResponse({"status": "success"}, status=204)
