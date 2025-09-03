@@ -81,9 +81,14 @@ def update_course_view(request, course_id):
 
     try:
         data = json.loads(request.body.decode("utf-8"))
-        for field in ["name", "code", "description", "mode_of_learning",
-                      "commitment_time", "duration", "requirements",
-                      "frequently_asked_questions", "is_published"]:
+        valid_fields = ["name", "code", "description", "mode_of_learning",
+                        "commitment_time", "duration", "requirements",
+                        "frequently_asked_questions", "is_published"]
+        invalid_fields = [field for field in data if field not in valid_fields]
+        if invalid_fields:
+            return JsonResponse({"error": f"Invalid fields: {', '.join(invalid_fields)}"}, status=400)
+
+        for field in valid_fields:
             if field in data:
                 setattr(course, field, data[field])
 
