@@ -14,7 +14,7 @@ class Course(models.Model):
     commitment_time = models.PositiveIntegerField(help_text="Commitment time in hours per week")
     requirements = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    frequently_asked_questions = models.TextField(blank=True, null=True)
+    frequently_asked_questions = models.JSONField(default=dict)
     start_date = models.DateField(blank=True, null=True)
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
@@ -28,7 +28,7 @@ class Course(models.Model):
 
 class Sprint(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     duration = models.PositiveIntegerField(help_text="Duration in weeks")
     start_date = models.DateField()
     description = models.TextField(blank=True, null=True)
@@ -41,9 +41,10 @@ class Sprint(models.Model):
         ordering = ["start_date"]
         unique_together = ("course", "name")
 
+
 class Module(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     start_date = models.DateField(blank=True, null=True)
     order_index = models.PositiveIntegerField(default=0, help_text="Order of the module in the sprint")
     end_date = models.DateField(blank=True, null=True)
@@ -69,22 +70,22 @@ class Module(models.Model):
 
 class Topic(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     order_index = models.PositiveIntegerField(default=0, help_text="Order of the topic in the module")
     resource_url = models.URLField(blank=True, null=True)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name="topics", null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["order_index"]
-        unique_together = ("module", "name")
 
     def __str__(self):
         return f"{self.module.name} - {self.name}"
 
 class SubTopic(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, null=True)
     resource_url = models.URLField(blank=True, null=True)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="subtopics")
@@ -115,6 +116,7 @@ class Project(models.Model):
     def __str__(self):
         return f"{self.name} - {self.start_date.strftime('%Y-%m-%d')}  - {self.end_date.strftime('%Y-%m-%d') if self.end_date else 'Ongoing'}"
 
+
 class Task(models.Model):
     TASK_TYPES = [
         ("quiz", "Quiz"),
@@ -140,7 +142,7 @@ class Task(models.Model):
     first_deadline = models.DateTimeField()
     second_deadline = models.DateTimeField(blank=True, null=True)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="tasks", null=True, blank=True)
-    project = models.ForeignKey(Project, related_name="tasks", on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, related_name="tasks", on_delete=models.CASCADE, null=True, blank=True)
     third_deadline = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
@@ -162,7 +164,7 @@ class Quiz(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["start_date"]
+        ordering = ["name"]
 
     def __str__(self):
         return f"{self.name} - {self.total_marks} marks"
