@@ -41,7 +41,15 @@ def create_sprint_view(request, course_id):
 			course=course,
 			is_active=data.get("is_active", True),
 		)
-		return JsonResponse({"status": "success", "sprint_id": sprint.id}, status=201)
+		return JsonResponse({"status": "success", "sprint": {
+			"id": sprint.id,
+			"name": sprint.name,
+			"duration": sprint.duration,
+			"start_date": sprint.start_date,
+			"description": sprint.description,
+			"course_id": sprint.course.id,
+			"is_active": sprint.is_active,
+		}}, status=201)
 	except Exception as e:
 		print("Error creating sprint:", e)
 		return JsonResponse({"error": str(e)}, status=500)
@@ -153,23 +161,34 @@ def update_sprint_view(request, sprint_id, course_id):
         if invalid_fields:
             return JsonResponse({"error": f"Invalid fields: {', '.join(invalid_fields)}"}, status=400)
 
+        if "name" in data and data["name"] != sprint.name:
+            if Sprint.objects.filter(name=data["name"], course_id=course_id).exclude(id=sprint_id).exists():
+                return JsonResponse({"error": "Sprint with this name already exists for this particular course"}, status=400)
+            
         for field in valid_fields:
             if field in data:
                 setattr(sprint, field, data[field])
 
         sprint.save()
-        return JsonResponse({"status": "success", "sprint_id": sprint.id}, status=200)
+        return JsonResponse({"status": "success", "sprint": {
+            "id": sprint.id,
+            "name": sprint.name,
+            "duration": sprint.duration,
+            "start_date": sprint.start_date,
+            "description": sprint.description,
+            "course_id": sprint.course.id,
+            "is_active": sprint.is_active,
+        }}, status=200)
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
     
 
 @transaction.atomic
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_sprint_view(request, sprint_id, course_id):
     """Delete a sprint under a specific course."""
-    if request.method != "DELETE":
-        return JsonResponse({"error": "Only DELETE method allowed"}, status=405)
-
     try:
         try:
             course = Course.objects.get(id=course_id)

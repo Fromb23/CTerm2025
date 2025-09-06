@@ -7,7 +7,7 @@ from user.models.user_models import CustomUser, AdminProfile
 from user.models.role_models import Role
 
 @api_view(["POST"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
 def create_admin_view(request):
     try:

@@ -44,7 +44,13 @@ def create_topic_view(request, module_id, course_id):
         resource_url=data.get("resource_url", "")
     )
 
-    return JsonResponse({"status": "success", "topic_id": topic.id}, status=201)
+    return JsonResponse({"status": "success", "topic": {
+        "id": topic.id,
+        "name": topic.name,
+        "order_index": topic.order_index,
+        "resource_url": topic.resource_url,
+        "module_id": topic.module.id
+    }}, status=201)
 
 
 @api_view(['GET'])

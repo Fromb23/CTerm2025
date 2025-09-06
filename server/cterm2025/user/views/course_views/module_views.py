@@ -49,7 +49,17 @@ def create_module_view(request, course_id):
     )
 
     return JsonResponse(
-        {"status": "success", "module_id": module.id},
+        {"status": "success", "module": {
+            "id": module.id,
+            "name": module.name,
+            "description": module.description,
+            "order_index": module.order_index,
+            "start_date": module.start_date,
+            "end_date": module.end_date,
+            "status": module.status,
+            "sprint_id": module.sprint.id,
+            "is_active": module.is_active,
+        }},
         status=201
     )
 
@@ -131,7 +141,16 @@ def update_module_view(request, module_id, course_id):
             setattr(module, field, data[field])
 
     module.save()
-    return JsonResponse({"status": "success", "module_id": module.id}, status=200)
+    return JsonResponse({"status": "success", "module": {
+        "id": module.id,
+        "name": module.name,
+        "start_date": module.start_date,
+        "end_date": module.end_date,
+        "description": module.description,
+        "status": module.status,
+        "sprint_id": module.sprint.id,
+        "is_active": module.is_active,
+    }}, status=200)
 
 
 @api_view(['DELETE'])

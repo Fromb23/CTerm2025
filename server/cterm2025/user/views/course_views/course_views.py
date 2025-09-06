@@ -35,7 +35,19 @@ def create_course_view(request):
             requirements=data.get("requirements", ""),
             is_published=data.get("is_published", False),
         )
-        return JsonResponse({"status": "success", "course_id": course.id}, status=201)
+        return JsonResponse({"status": "success", "course": {
+            "id": course.id,
+            "name": course.name,
+            "course_code": course.course_code,
+            "description": course.description,
+            "mode_of_learning": course.mode_of_learning,
+            "commitment_time": course.commitment_time,
+            "estimated_duration": course.duration,
+            "requirements": course.requirements,
+            "frequently_asked_questions": course.frequently_asked_questions,
+            "start_date": course.start_date,
+            "is_published": course.is_published,
+        }}, status=201)
     except Exception as e:
         print(f"Error creating course: {e}")
         return JsonResponse({"error": str(e)}, status=500)
@@ -87,7 +99,9 @@ def update_course_view(request, course_id):
         invalid_fields = [field for field in data if field not in valid_fields]
         if invalid_fields:
             return JsonResponse({"error": f"Invalid fields: {', '.join(invalid_fields)}"}, status=400)
-
+        if "name" in data and data["name"] != course.name:
+            if Course.objects.filter(name=data["name"]).exclude(id=course_id).exists():
+                return JsonResponse({"error": "Course with this name already exists"}, status=400)
         for field in valid_fields:
             if field in data:
                 setattr(course, field, data[field])

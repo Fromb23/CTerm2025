@@ -58,8 +58,8 @@ urlpatterns = [
     path("<int:course_id>/sprints/list/", list_sprints_view, name="list_sprints"),
     path("<int:course_id>/sprints/", create_sprint_view, name="create_sprint"),
     path("<int:course_id>/sprints/<int:sprint_id>/", list_sprint_view, name="get_sprint"),
-    path("<int:course_id>/sprints/<int:sprint_id>/", update_sprint_view, name="update_sprint"),
-    path("<int:course_id>/sprints/<int:sprint_id>/", delete_sprint_view, name="delete_sprint"),
+    path("<int:course_id>/sprints/<int:sprint_id>/update/", update_sprint_view, name="update_sprint"),
+    path("<int:course_id>/sprints/<int:sprint_id>/delete/", delete_sprint_view, name="delete_sprint"),
 
     # Modules
     path("<int:course_id>/modules/list/", list_modules_view, name="list_modules"),
