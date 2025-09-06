@@ -9,16 +9,22 @@ User = get_user_model()
 EXEMPT_PATHS = [
     "/api/auth/login/",
     "/api/token/refresh/",
+    # "/api/users/roles/create/",
+    # "/api/users/admins/",
 ]
 
 class JWTAuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
-        if request.path in EXEMPT_PATHS:
+        if request.path.rstrip("/") in [p.rstrip("/") for p in EXEMPT_PATHS]:
+            request.META.pop("HTTP_AUTHORIZATION", None)
             return
 
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
-            return JsonResponse({"error": "Authentication credentials were not provided"}, status=401)
+            return JsonResponse(
+                {"error": "Authentication credentials were not provided"},
+                status=401
+            )
 
         token = auth_header.split(" ")[1]
 
