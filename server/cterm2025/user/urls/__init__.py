@@ -4,6 +4,7 @@ urlpatterns = [
     path("users/", include("user.urls.user_urls")),
     path("courses/", include("user.urls.course_urls")),
 	path("auth/", include("user.urls.auth.auth_urls")),
+	path("projects/", include("user.urls.project_urls")),
 ]
 from .error_handlers import (
     custom_bad_request,
