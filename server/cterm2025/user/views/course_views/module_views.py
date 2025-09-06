@@ -3,20 +3,18 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 from user.models.course_model import Course, Sprint, Module
 from user.utils.code_generator import generate_module_code
 
 
-
-@csrf_exempt
-@require_http_methods(["POST"])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
 def create_module_view(request, course_id):
     """Create a new module under a course."""
-    if request.method != "POST":
-        return JsonResponse({"error": "Only POST method allowed"}, status=405)
 
     data = json.loads(request.body.decode("utf-8"))
     sprint_id = data.get("sprint_id")
@@ -56,7 +54,8 @@ def create_module_view(request, course_id):
     )
 
 
-@require_http_methods(["GET"])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_modules_view(request, course_id):
     """List all modules for a specific course."""
     try:
@@ -100,8 +99,8 @@ def list_module_view(request, course_id, module_id):
 }, status=200)
 
 
-@csrf_exempt
-@require_http_methods("PATCH")
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
 def update_module_view(request, module_id, course_id):
     """Update a module of a course"""
@@ -135,8 +134,8 @@ def update_module_view(request, module_id, course_id):
     return JsonResponse({"status": "success", "module_id": module.id}, status=200)
 
 
-@csrf_exempt
-@require_http_methods(["DELETE"])
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
 def delete_module_view(request, module_id, course_id):
     """Delete a module."""

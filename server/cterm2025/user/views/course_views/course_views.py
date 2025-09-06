@@ -2,6 +2,8 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from django.utils.dateparse import parse_date
 from django.db import transaction
 from user.models.course_model import Course
@@ -9,11 +11,11 @@ from user.utils.code_generator import generate_course_code
 
 
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
 def create_course_view(request):
     """Create a new course"""
-    if request.method != "POST":
-        return JsonResponse({"error": "Only POST method allowed"}, status=405)
 
     try:
         data = json.loads(request.body.decode("utf-8"))
@@ -38,21 +40,20 @@ def create_course_view(request):
         print(f"Error creating course: {e}")
         return JsonResponse({"error": str(e)}, status=500)
 
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_courses_view(request):
     """List all courses"""
-    if request.method != "GET":
-        return JsonResponse({"error": "Only GET method allowed"}, status=405)
 
     courses = list(Course.objects.values())
     print("Courses:", courses)
     return JsonResponse({"courses": courses}, status=200)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_course_view(request, course_id):
     """Retrieve a single course by ID"""
-    if request.method != "GET":
-        return JsonResponse({"error": "Only GET method allowed"}, status=405)
 
     course = get_object_or_404(Course, id=course_id)
     return JsonResponse({
@@ -70,12 +71,11 @@ def list_course_view(request, course_id):
     }, status=200)
 
 
-@csrf_exempt
 @transaction.atomic
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
 def update_course_view(request, course_id):
     """Update an existing course"""
-    if request.method not in ["PUT", "PATCH"]:
-        return JsonResponse({"error": "Only PUT/PATCH method allowed"}, status=405)
 
     course = get_object_or_404(Course, id=course_id)
 
@@ -101,6 +101,8 @@ def update_course_view(request, course_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 @csrf_exempt
 @transaction.atomic
 def delete_course_view(request, course_id):

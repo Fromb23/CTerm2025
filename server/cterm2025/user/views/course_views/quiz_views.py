@@ -6,23 +6,21 @@ from django.db import transaction
 import json
 from user.models.course_model import Task, Quiz
 
-def create_quiz_view(request, task_id):
-	"""
-	Create a new quiz for a task.
-	Expects JSON data in the request body.
-	"""
-	data = json.loads(request.body.decode("utf-8"))
-	
-	task = get_object_or_404(Task, id=task_id)
+def create_quiz_view(task, quiz_data):
+    """
+    Helper function to create a quiz for a given task.
+    """
+    try:
+        quiz = Quiz.objects.create(
+            name=quiz_data.get("name", task.name),
+            description=quiz_data.get("description", ""),
+            total_marks=quiz_data.get("total_marks", task.max_score or 0),
+            tasks=task,
+        )
+        return JsonResponse({"status": "success", "quiz_id": quiz.id}, status=201)
+    except Exception as e:
+        return JsonResponse({"error": f"Failed to create quiz: {str(e)}"}, status=500)
 
-	quiz = Quiz.objects.create(
-		name=data.get("name", ""),
-		description=data.get("description", ""),
-		total_marks=data.get("total_marks", 0),
-		tasks=task,
-	)
-
-	return JsonResponse({"status": "success", "quiz_id": quiz.id}, status=201)
 
 @require_http_methods(["GET"])
 def list_quizzes_view(request, task_id):
@@ -44,20 +42,30 @@ def get_quiz_view(request, quiz_id):
 		"updated_at": quiz.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
 	}, status=200)
 
-@csrf_exempt
-@require_http_methods(["POST"])
-@transaction.atomic
-def update_quiz_view(request, quiz_id):
-	"""Update an existing quiz."""
-	data = json.loads(request.body.decode("utf-8"))
-	quiz = get_object_or_404(Quiz, id=quiz_id)
 
-	quiz.name = data.get("name", quiz.name)
-	quiz.description = data.get("description", quiz.description)
-	quiz.total_marks = data.get("total_marks", quiz.total_marks)
-	quiz.save()
+def update_quiz_view(request, quiz_data):
+	"""Helper function to update a quiz for a given task."""
 
-	return JsonResponse({"status": "success", "quiz_id": quiz.id}, status=200)
+	quiz = Quiz.objects.filter(id=quiz_data.get("quiz_id")).first()
+	if not quiz:
+		return JsonResponse({"error": "Quiz not found"}, status=404)
+	try:
+		quiz.name = quiz_data.get("name", quiz.name)
+		quiz.description = quiz_data.get("description", quiz.description)
+		quiz.total_marks = quiz_data.get("total_marks", quiz.total_marks)
+		quiz.save()
+	except Exception as e:
+		return JsonResponse({"error": f"Failed to update quiz: {str(e)}"}, status=500)
+
+	return JsonResponse({"status": "success", "quiz": {
+		"id": quiz.id,
+		"name": quiz.name,
+		"description": quiz.description,
+		"total_marks": quiz.total_marks,
+		"created_at": quiz.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+		"updated_at": quiz.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+	}}, status=200)
+
 
 @csrf_exempt
 @require_http_methods(["DELETE"])

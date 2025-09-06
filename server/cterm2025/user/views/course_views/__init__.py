@@ -21,7 +21,7 @@ from .subTopic_views import (
 	list_subTopics_view,
 	update_subTopic_view,
 	delete_subTopic_view,
-	get_subTopic_view
+	list_subTopic_view
 )
 
 from .sprint_views import (

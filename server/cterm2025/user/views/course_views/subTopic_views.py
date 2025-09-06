@@ -1,44 +1,64 @@
 from django.http import JsonResponse
+import json
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from user.models.course_model import SubTopic,Topic
+from user.models.course_model import Module, SubTopic,Topic, Course
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
-def create_subTopic_view(request):
+def create_subTopic_view(request, topic_id, course_id, module_id):
 	"""Create a new sub topic for a given topic."""
-	name = request.POST.get("name")
-	description = request.POST.get("description", "")
-	resource_url = request.POST.get("resource_url", "")
-	topic_id = request.POST.get("topic_id")
+	if not topic_id or not course_id or not module_id:
+		return JsonResponse({"error": "Missing topic_id, course_id or module_id"}, status=400)
 
-	if not name or not topic_id:
-		return JsonResponse({"error": "Missing required fields"}, status=400)
+	topic = Topic.objects.filter(id=topic_id).first()
+	if not topic:
+		return JsonResponse({"error": "Topic not found"}, status=404)
+	data = json.loads(request.body)
+	valid_fields = ["name", "description", "resource_url"]
+	invalid_fields = [field for field in valid_fields if field not in data]
+	if invalid_fields:
+		return JsonResponse({"error": f"Missing required fields: {', '.join(invalid_fields)}"}, status=400)
 
-	module = get_object_or_404(Topic, id=topic_id)
+	name = data.get("name")
+	description = data.get("description", "")
+	resource_url = data.get("resource_url", "")
+
+	if SubTopic.objects.filter(name=name).exists():
+		return JsonResponse({"error": "Sub Topic with this name already exists"}, status=400)
 
 	sub_topic = SubTopic.objects.create(
-		sub_topic=sub_topic,
+		topic_id=topic_id,
 		name=name,
 		description=description,
-		resource_url=resource_url,
-		created_at=request.POST.get("created_at", None),
-		updated_at=request.POST.get("updated_at", None)
+		resource_url=resource_url
 	)
 
-	return JsonResponse({"status": "success", "sub topic_id": sub_topic.id}, status=201)
+	return JsonResponse({"status": "success", "sub_topic": {
+		"id": sub_topic.id,
+		"name": sub_topic.name,
+		"description": sub_topic.description,
+		"resource_url": sub_topic.resource_url,
+		"created_at": sub_topic.created_at.isoformat(),
+		"updated_at": sub_topic.updated_at.isoformat(),
+		"topic_id": sub_topic.topic.id
+	}}, status=201)
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
-def list_subTopics_view(request, subtopic_id):
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_subTopics_view(request, course_id, module_id, topic_id):
 	"""List all sub topics of a given topic."""
-	sub_topic = get_object_or_404(SubTopic, id=subtopic_id)
-	sub_topics = sub_topic.sub_topic.all().order_by("id")
+	if not topic_id or not module_id or not course_id:
+		return JsonResponse({"error": "Missing topic_id, module_id or course_id"}, status=400)
+	
+	sub_topics = SubTopic.objects.filter(topic_id=topic_id).order_by("id")
 
 	sub_topic_list = [
 		{
@@ -52,11 +72,15 @@ def list_subTopics_view(request, subtopic_id):
 
 	return JsonResponse({"sub topics": sub_topic_list}, status=200)
 
-@csrf_exempt
-@require_http_methods(["GET"])
-def get_subTopic_view(request, sub_topic_id):
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_subTopic_view(request, course_id, module_id, topic_id, sub_topic_id):
 	"""Get details of a specific topic."""
-	sub_topic = get_object_or_404(SubTopic, id=sub_topic_id)
+	if not sub_topic_id or not course_id or not module_id or not topic_id:
+		return JsonResponse({"error": "Missing course_id, module_id, topic_id or sub_topic_id"}, status=400)
+	sub_topic = SubTopic.objects.filter(id=sub_topic_id).first()
+	if not sub_topic:
+		return JsonResponse({"error": "Sub Topic not found"}, status=404)
 
 	sub_topic_data = {
 		"id": sub_topic.id,
@@ -68,32 +92,56 @@ def get_subTopic_view(request, sub_topic_id):
 		"module_id": sub_topic.topic.id
 	}
 
-	return JsonResponse({"topic": sub_topic_data}, status=200)
+	return JsonResponse({"success": True, "sub_topic": sub_topic_data}, status=200)
 
-@csrf_exempt
-@require_http_methods(["POST"])
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
-def update_subTopic_view(request, sub_topic_id):
+def update_subTopic_view(request, course_id, module_id, topic_id, sub_topic_id):
 	"""Update an existing topic."""
-	sub_topic = get_object_or_404(SubTopic, id=sub_topic_id)
+	if not sub_topic_id or not course_id or not module_id or not topic_id:
+		return JsonResponse({"error": "Missing sub_topic_id, course_id, module_id or topic_id"}, status=400)
 
-	name = request.POST.get("name", sub_topic.name)
-	description = request.POST.get("description", sub_topic.description)
-	resource_url = request.POST.get("resource_url", sub_topic.resource_url)
+	data = json.loads(request.body)
+	valid_fields = ["name", "description", "resource_url"]
+	invalid_fields = [field for field in data if field not in valid_fields]
+	if invalid_fields:
+		return JsonResponse({"error": f"Missing required fields: {', '.join(invalid_fields)}"}, status=400)
+
+	sub_topic = SubTopic.objects.filter(id=sub_topic_id).first()
+	if not sub_topic:
+		return JsonResponse({"error": "Sub Topic not found"}, status=404)
+	
+	name = data.get("name", sub_topic.name)
+	description = data.get("description", sub_topic.description)
+	resource_url = data.get("resource_url", sub_topic.resource_url)
 
 	sub_topic.name = name
 	sub_topic.description = description
 	sub_topic.resource_url = resource_url
 	sub_topic.save()
 
-	return JsonResponse({"status": "success", "message": "Sub topic updated successfully", "topic_id": sub_topic.id}, status=200)
+	return JsonResponse({"status": "success", "message": "Sub topic updated successfully", "sub_topic":{
+		"id": sub_topic.id,
+		"name": sub_topic.name,
+		"description": sub_topic.description,
+		"resource_url": sub_topic.resource_url,
+		"created_at": sub_topic.created_at.isoformat(),
+		"updated_at": sub_topic.updated_at.isoformat(),
+		"topic_id": sub_topic.topic.id
+	}}, status=200)
 
-@csrf_exempt
-@require_http_methods(["DELETE"])
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
-def delete_subTopic_view(request, sub_topic_id):
+def delete_subTopic_view(request, course_id, module_id, topic_id, sub_topic_id):
 	"""Delete a specific topic."""
-	sub_topic = get_object_or_404(SubTopic, id=sub_topic_id)
+	if not sub_topic_id or not course_id or not module_id or not topic_id:
+		return JsonResponse({"error": "Missing sub_topic_id, course_id, module_id or topic_id"}, status=400)
+	sub_topic = SubTopic.objects.filter(id=sub_topic_id).first()
+	if not sub_topic:
+		return JsonResponse({"error": "Sub Topic not found"}, status=404)
 	sub_topic.delete()
 
 	return JsonResponse({"status": "success", "message": "Sub Topic deleted successfully"}, status=204)

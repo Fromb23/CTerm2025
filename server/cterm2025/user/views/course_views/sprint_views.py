@@ -1,5 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 import json
 from django.utils.dateparse import parse_date
@@ -43,11 +45,12 @@ def create_sprint_view(request, course_id):
 	except Exception as e:
 		print("Error creating sprint:", e)
 		return JsonResponse({"error": str(e)}, status=500)
-	
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
 def list_sprints_view(request, course_id=None):
     """List all sprints or sprints for a specific course."""
-    if request.method != "GET":
-        return JsonResponse({"error": "Only GET method allowed"}, status=405)
 
     if course_id:
         course_exists = Course.objects.filter(id=course_id).exists()
@@ -88,6 +91,9 @@ def update_sprint_view(request, sprint_id, course_id):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
 def list_sprint_view(request, sprint_id, course_id):
     """Retrieve a single sprint by sprint_id under a specific course."""
     if request.method != "GET":
