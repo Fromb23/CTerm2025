@@ -1,4 +1,3 @@
-import uuid
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models, transaction
 from django.utils import timezone
@@ -53,7 +52,7 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.AutoField(primary_key=True)
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=255, validators=[MinLengthValidator(2)])
     profile_picture_url = models.URLField(blank=True, null=True)
@@ -128,7 +127,6 @@ class AdminProfile(models.Model):
         blank=True,
         related_name='admins'
     )
-    custom_permissions = models.JSONField(default=dict)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -162,7 +160,7 @@ class AdminRoleHistory(models.Model):
     """
     Tracks role assignment history for admin users.
     """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.AutoField(primary_key=True)
     user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
