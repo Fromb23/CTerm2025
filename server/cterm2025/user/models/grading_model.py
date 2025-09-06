@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils import timezone
-from uuid import uuid4
 from .course_model import Module, Task
 from .user_models import CustomUser
 
@@ -13,7 +12,7 @@ class AssessmentWeight(models.Model):
         ("reflection", "Reflection"),
     ]
 
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    id = models.AutoField(primary_key=True)
     course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name="assessment_weights")
     task_type = models.CharField(max_length=20, choices=TASK_TYPES)
     weight_percent = models.DecimalField(max_digits=5, decimal_places=2)
@@ -32,7 +31,7 @@ class CheckerResult(models.Model):
         ("error", "Error"),
     ]
 
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    id = models.AutoField(primary_key=True)
     task_progress = models.ForeignKey('TaskProgress', on_delete=models.CASCADE, related_name="checker_results")
     stdout = models.TextField(blank=True, null=True)
     stderr = models.TextField(blank=True, null=True)
@@ -44,7 +43,7 @@ class CheckerResult(models.Model):
 
 # --- Quiz Submission ---
 class QuizSubmission(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    id = models.AutoField(primary_key=True)
     quiz_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="quiz_submissions")
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="quiz_submissions")
     answers = models.JSONField()
@@ -56,7 +55,7 @@ class QuizSubmission(models.Model):
 
 # --- Final Project Submission ---
 class FinalProjectSubmission(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    id = models.AutoField(primary_key=True)
     student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="final_project_submissions")
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name="final_project_submissions")
     title = models.CharField(max_length=255)
