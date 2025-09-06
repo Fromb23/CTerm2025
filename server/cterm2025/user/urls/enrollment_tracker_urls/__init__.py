@@ -1,3 +1,3 @@
-from .enrollment_tracker_urls import urlpatterns
+from user.urls.enrollment_tracker_urls import urlpatterns
 
 __all__ = ['urlpatterns']
