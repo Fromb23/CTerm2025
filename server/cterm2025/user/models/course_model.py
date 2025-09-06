@@ -3,6 +3,7 @@ from django.utils import timezone
 
 
 class Course(models.Model):
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, unique=True)
     course_code = models.CharField(max_length=50, blank=True, null=True)
     duration = models.PositiveIntegerField(help_text="Duration in weeks")
