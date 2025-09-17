@@ -1,175 +1,213 @@
-# views/module_views.py
-import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from rest_framework.decorators import api_view, permission_classes
+# views.py
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from django.db import transaction
-from user.models.course_model import Course, Sprint, Module
-from user.utils.code_generator import generate_module_code
+from django.shortcuts import get_object_or_404
+from user.models.course_model import Module, Course, Sprint
+from user.serializers.module_serializers import ModuleSerializer, ModuleListSerializer
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-@transaction.atomic
-def create_module_view(request, course_id):
-    """Create a new module under a course."""
+class ModuleViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing modules under courses
+    Provides CRUD operations for modules within a specific course
+    """
+    permission_classes = [IsAuthenticated]
 
-    data = json.loads(request.body.decode("utf-8"))
-    sprint_id = data.get("sprint_id")
+    def get_serializer_class(self):
+        """Return appropriate serializer based on action"""
+        if self.action == 'list':
+            return ModuleListSerializer
+        return ModuleSerializer
 
-    if not sprint_id or not course_id:
-        return JsonResponse({"error": "sprint_id and course_id are required"}, status=400)
+    def get_queryset(self):
+        """Return modules for the specific course"""
+        course_pk = self.kwargs.get('course_pk')
+        if course_pk:
+            # Ensure course exists
+            get_object_or_404(Course, pk=course_pk)
+            return Module.objects.filter(sprint__course_id=course_pk)
+        return Module.objects.none()
 
-    try:
-        course = Course.objects.get(id=course_id)
-    except Course.DoesNotExist:
-        return JsonResponse({"error": "Course not found"}, status=404)
+    def get_serializer_context(self):
+        """Add course_pk to serializer context for validation"""
+        context = super().get_serializer_context()
+        context['course_pk'] = self.kwargs.get('course_pk')
+        return context
 
-    try:
-        sprint = Sprint.objects.get(id=sprint_id, course=course)
-    except Sprint.DoesNotExist:
-        return JsonResponse({"error": "Sprint not found for this course"}, status=404)
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        """Create a new module under a course"""
+        course_pk = kwargs.get('course_pk')
+        if not course_pk:
+            return Response(
+                {"error": "Course ID is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-    module_name = data.get("name")
-    existing_module = Module.objects.filter(sprint=sprint, name=module_name).first()
-    if existing_module:
-        return JsonResponse({"error": "Module name already exists for this sprint"}, status=400)
+        # Verify course exists
+        get_object_or_404(Course, pk=course_pk)
+        
+        # Check if sprint_id is provided
+        sprint_id = request.data.get('sprint_id')
+        if not sprint_id:
+            return Response(
+                {"error": "sprint_id is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            module = serializer.save()
+            
+            return Response({
+                "status": "success",
+                "module": ModuleSerializer(module, context=self.get_serializer_context()).data
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response({
+            "error": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
-    module = Module.objects.create(
-        name=module_name,
-        description=data.get("description", ""),
-        order_index=data.get("order_index", 0),
-        start_date=data.get("start_date"),
-        end_date=data.get("end_date"),
-        status=data.get("status", "draft"),
-        sprint=sprint,
-        is_active=data.get("is_active", True),
-    )
+    def list(self, request, *args, **kwargs):
+        """List all modules for a specific course"""
+        course_pk = kwargs.get('course_pk')
+        
+        # Check if course exists
+        try:
+            Course.objects.get(pk=course_pk)
+        except Course.DoesNotExist:
+            return Response(
+                {"error": "Course not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-    return JsonResponse(
-        {"status": "success", "module": {
-            "id": module.id,
-            "name": module.name,
-            "description": module.description,
-            "order_index": module.order_index,
-            "start_date": module.start_date,
-            "end_date": module.end_date,
-            "status": module.status,
-            "sprint_id": module.sprint.id,
-            "is_active": module.is_active,
-        }},
-        status=201
-    )
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "modules": serializer.data
+        }, status=status.HTTP_200_OK)
 
+    def retrieve(self, request, *args, **kwargs):
+        """Retrieve a single module by ID under a specific course"""
+        course_pk = kwargs.get('course_pk')
+        module_pk = kwargs.get('pk')
+        
+        if not course_pk:
+            return Response(
+                {"error": "Course ID is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not module_pk:
+            return Response(
+                {"error": "Module ID is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def list_modules_view(request, course_id):
-    """List all modules for a specific course."""
-    try:
-        course = Course.objects.get(id=course_id)
-    except Course.DoesNotExist:
-        return JsonResponse({"error": "Course not found"}, status=404)
+        # Verify course exists
+        try:
+            course = Course.objects.get(pk=course_pk)
+        except Course.DoesNotExist:
+            return Response(
+                {"error": "Course not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-    modules = list(Module.objects.filter(sprint__course_id=course_id).values())
-    return JsonResponse({"modules": modules}, status=200)
+        # Get module for this specific course
+        try:
+            module = Module.objects.get(pk=module_pk, sprint__course=course)
+        except Module.DoesNotExist:
+            return Response(
+                {"error": "Module not found for this course"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
+        serializer = self.get_serializer(module)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-@require_http_methods(["GET"])
-def list_module_view(request, course_id, module_id):
-    """Retrieve a single module based on a course"""
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        """Update an existing module (supports both PUT and PATCH)"""
+        partial = kwargs.pop('partial', True)
+        course_pk = kwargs.get('course_pk')
+        module_pk = kwargs.get('pk')
+        
+        if not course_pk or not module_pk:
+            return Response(
+                {"error": "Course ID and Module ID are required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-    try:
-        course = Course.objects.get(id=course_id)
-    except Course.DoesNotExist:
-        return JsonResponse({"error": "Course not found"}, status=404)
+        # Verify course exists
+        try:
+            course = Course.objects.get(pk=course_pk)
+        except Course.DoesNotExist:
+            return Response(
+                {"error": "Course not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-    try:
-        module = Module.objects.get(id=module_id, sprint__course=course)
-    except Module.DoesNotExist:
-        return JsonResponse({"error": "Module not found for this course"}, status=404)
+        # Get module for this specific course
+        try:
+            module = Module.objects.get(pk=module_pk, sprint__course=course)
+        except Module.DoesNotExist:
+            return Response(
+                {"error": "Module not found for this course"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-    return JsonResponse({
-    "id": module.id,
-    "name": module.name,
-    "start_date": module.start_date.isoformat() if module.start_date else None,
-    "end_date": module.end_date.isoformat() if module.end_date else None,
-    "description": module.description,
-    "status": module.status,
-    "sprint": {
-        "id": module.sprint.id,
-        "name": module.sprint.name,
-        "start_date": module.sprint.start_date.isoformat() if module.sprint.start_date else None,
-    },
-    "is_active": module.is_active,
-    "created_at": module.created_at.isoformat(),
-    "updated_at": module.updated_at.isoformat(),
-}, status=200)
+        serializer = self.get_serializer(module, data=request.data, partial=partial)
+        
+        if serializer.is_valid():
+            updated_module = serializer.save()
+            return Response({
+                "status": "success",
+                "module": ModuleSerializer(updated_module, context=self.get_serializer_context()).data
+            }, status=status.HTTP_200_OK)
+        
+        return Response({
+            "error": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
+    @transaction.atomic
+    def destroy(self, request, *args, **kwargs):
+        """Delete a module under a specific course"""
+        course_pk = kwargs.get('course_pk')
+        module_pk = kwargs.get('pk')
+        
+        if not course_pk or not module_pk:
+            return Response(
+                {"error": "Course ID and Module ID are required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
-@transaction.atomic
-def update_module_view(request, module_id, course_id):
-    """Update a module of a course"""
+        # Verify course exists
+        try:
+            course = Course.objects.get(pk=course_pk)
+        except Course.DoesNotExist:
+            return Response(
+                {"error": "Course not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-    if not module_id or not course_id:
-        return JsonResponse({"error": "module_id and course_id are required"}, status=400)
+        # Get module for this specific course
+        try:
+            module = Module.objects.get(pk=module_pk, sprint__course=course)
+        except Module.DoesNotExist:
+            return Response(
+                {"error": "Module not found for this course"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-    try:
-        course = Course.objects.get(id=course_id)
-    except Course.DoesNotExist:
-        return JsonResponse({"error": "Course not found"}, status=404)
+        module.delete()
+        return Response({
+            "status": "success",
+            "message": "Module deleted"
+        }, status=status.HTTP_200_OK)
 
-    try:
-        module = Module.objects.get(id=module_id, sprint__course=course)
-    except Module.DoesNotExist:
-        return JsonResponse({"error": "Module not found for this course"}, status=404)
-
-    data = json.loads(request.body.decode("utf-8"))
-
-    valid_fields = ["name", "start_date", "end_date", "duration", "description", "status", "is_active"]
-    invalid_fields = [field for field in data if field not in valid_fields]
-
-    if invalid_fields:
-        return JsonResponse({"error": f"Invalid fields: {', '.join(invalid_fields)}"}, status=400)
-
-    for field in valid_fields:
-        if field in data:
-            setattr(module, field, data[field])
-
-    module.save()
-    return JsonResponse({"status": "success", "module": {
-        "id": module.id,
-        "name": module.name,
-        "start_date": module.start_date,
-        "end_date": module.end_date,
-        "description": module.description,
-        "status": module.status,
-        "sprint_id": module.sprint.id,
-        "is_active": module.is_active,
-    }}, status=200)
-
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-@transaction.atomic
-def delete_module_view(request, module_id, course_id):
-    """Delete a module."""
-    if not module_id or not course_id:
-        return JsonResponse({"error": "module_id and course_id are required"}, status=400)
-    
-    try:
-        course = Course.objects.get(id=course_id)
-    except Course.DoesNotExist:
-        return JsonResponse({"error": "Course not found"}, status=404)
-
-    try:
-        module = Module.objects.get(id=module_id, sprint__course=course)
-    except Module.DoesNotExist:
-        return JsonResponse({"error": "Module not found for this course"}, status=404)
-
-    module.delete()
-    return JsonResponse({"status": "success", "message": "Module deleted"}, status=200)
+    # Override partial_update to use our custom update method
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
