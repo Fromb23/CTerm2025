@@ -45,7 +45,17 @@ def create_student_view(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-    return JsonResponse({"status": "success", "user_id": str(user.id)}, status=201)
+    return JsonResponse({"status": "success", "data": {
+        "student_id": str(user.id),
+        "email": user.email,
+        "full_name": user.full_name,
+        "date_joined": user.created_at,
+        "current_level": user.student_profile.current_level,
+        "education_background": user.student_profile.education_background,
+        "career_goals": user.student_profile.career_goals,
+        "skills": user.student_profile.skills,
+        "preferred_language": user.student_profile.preferred_language,
+    }}, status=201)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -53,18 +63,45 @@ def create_student_view(request):
 def list_students_view(request):
     """List all students with basic info"""
 
-    students = CustomUser.objects.filter(role="student").select_related("studentprofile")
+    students = CustomUser.objects.filter(user_type="student").select_related("student_profile")
     data = [
         {
             "id": str(student.id),
             "email": student.email,
             "full_name": student.full_name,
-            "date_joined": student.date_joined,
+            "created_at": student.created_at,
         }
         for student in students
     ]
 
     return JsonResponse({"students": data}, status=200)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
+def get_student_details_view(request, student_id):
+    """Get details of a specific student"""
+    if not student_id:
+        return JsonResponse({"error": "Student ID is required"}, status=400)
+
+    user = CustomUser.objects.filter(id=student_id, user_type="student").first()
+    if not user:
+        return JsonResponse({"error": "Student not found"}, status=404)
+
+    data = {
+        "id": str(user.id),
+        "email": user.email,
+        "full_name": user.full_name,
+        "created_at": user.created_at,
+        "current_level": user.student_profile.current_level,
+        "education_background": user.student_profile.education_background,
+        "career_goals": user.student_profile.career_goals,
+        "skills": user.student_profile.skills,
+        "preferred_language": user.student_profile.preferred_language,
+    }
+
+    return JsonResponse({"student": data}, status=200)
 
 
 @api_view(['PATCH'])
