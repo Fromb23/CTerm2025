@@ -1,12 +1,13 @@
 from rest_framework import serializers
 from django.db.models import Count, Avg, Q
 from django.utils import timezone
+from user.models.course_model import Course
+from user.models.user_models import CustomUser
 
 from user.models.course_enrollment import (
     CourseEnrollment, SprintProgress, ModuleProgress, 
     TopicProgress, SubTopicProgress, TaskProgress, ProjectProgress
 )
-
 class TaskProgressSerializer(serializers.ModelSerializer):
     """
     Serializer for individual task progress tracking
@@ -259,37 +260,132 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
     """
     Main serializer for course enrollments with comprehensive progress data
     """
+
+    course = serializers.PrimaryKeyRelatedField(
+        queryset=Course.objects.all(),
+        error_messages={
+            "does_not_exist": "Course not found.",
+            "invalid": "Invalid course ID."
+        }
+    )
+    
+    # User field - writable for admin, read-only for students
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(),
+        required=False,
+        error_messages={
+            "does_not_exist": "User not found.",
+            "invalid": "Invalid user ID."
+        }
+    )
+    
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
     user_email = serializers.EmailField(source='user.email', read_only=True)
     course_name = serializers.CharField(source='course.name', read_only=True)
     course_description = serializers.CharField(source='course.description', read_only=True)
     course_duration = serializers.CharField(source='course.duration', read_only=True)
-    
+
     # Progress relationships
     sprint_progresses = SprintProgressSerializer(many=True, read_only=True)
     module_progresses = ModuleProgressSerializer(many=True, read_only=True)
     project_progresses = ProjectProgressSerializer(many=True, read_only=True)
-    
+
     # Computed fields
     overall_progress = serializers.SerializerMethodField()
     time_enrolled = serializers.SerializerMethodField()
     next_milestone = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = CourseEnrollment
         fields = [
             'id', 'user', 'course', 'user_name', 'user_email',
             'course_name', 'course_description', 'course_duration',
             'enrolled_on', 'completed_on', 'status', 'completion_percentage',
-            'is_active', 'updated_at', 'sprint_progresses', 
+            'is_active', 'updated_at', 'sprint_progresses',
             'module_progresses', 'project_progresses', 'overall_progress',
             'time_enrolled', 'next_milestone'
         ]
-        read_only_fields = ['id', 'user', 'enrolled_on', 'updated_at']
+        read_only_fields = ['id', 'enrolled_on', 'updated_at']
 
+    def validate(self, data):
+        """Global validation with proper user handling"""
+        request = self.context.get("request")
+        current_user = self.context.get("user") or getattr(request, "user", None)
+        
+        # Handle user assignment based on user type
+        if not self.instance:  # Creating new enrollment
+            if current_user.user_type == "student":
+                data["user"] = current_user
+            elif current_user.user_type == "admin":
+                if not data.get("user"):
+                    raise serializers.ValidationError({
+                        "error": "Admin must specify a user for enrollment."
+                    })
+            else:
+                raise serializers.ValidationError({
+                    "error": "You are not allowed to create enrollments."
+                })
+        
+        user = data.get("user", self.instance.user if self.instance else None)
+        course = data.get("course", self.instance.course if self.instance else None)
+
+        if not course:
+            raise serializers.ValidationError({
+                "error": "A valid course must be provided."
+            })
+
+        if not self.instance and CourseEnrollment.objects.filter(user=user, course=course).exists():
+            raise serializers.ValidationError({
+                "error": "This user is already enrolled in the selected course."
+            })
+
+        if getattr(course, "is_archived", False):
+            raise serializers.ValidationError({
+                "error": "This course is archived and cannot accept enrollments."
+            })
+
+        if getattr(course, "status", None) == "completed":
+            raise serializers.ValidationError({
+                "error": "This course has completed and cannot accept new enrollments."
+            })
+
+        return data
+
+    def validate_user(self, value):
+        """Validate user field based on current user permissions"""
+        request_user = self.context.get("user")
+        
+        if request_user and request_user.user_type != "admin":
+            # Non-admin users can only enroll themselves
+            if value != request_user:
+                raise serializers.ValidationError(
+                    "You can only enroll yourself in courses."
+                )
+        
+        return value
+
+    def validate_status(self, value):
+        """Validate enrollment status transitions"""
+        if self.instance:
+            current_status = self.instance.status
+            valid_transitions = {
+                'pending': ['active', 'withdrawn'],
+                'active': ['paused', 'completed', 'withdrawn'],
+                'paused': ['active', 'withdrawn'],
+                'completed': [],
+                'withdrawn': []
+            }
+
+            if value not in valid_transitions.get(current_status, []):
+                raise serializers.ValidationError(
+                    f"Cannot transition from {current_status} to {value}"
+                )
+
+        return value
+
+    # Rest of the methods remain the same...
     def get_overall_progress(self, obj):
         """Get comprehensive progress overview"""
-        # Sprint progress
         sprints = obj.sprint_progresses.all()
         sprint_stats = {
             'total': sprints.count(),
@@ -297,8 +393,7 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
             'in_progress': sprints.filter(status='in_progress').count(),
             'avg_completion': sprints.aggregate(avg=Avg('completion_percentage'))['avg'] or 0
         }
-        
-        # Module progress
+
         modules = obj.module_progresses.all()
         module_stats = {
             'total': modules.count(),
@@ -306,8 +401,7 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
             'in_progress': modules.filter(status='in_progress').count(),
             'avg_completion': modules.aggregate(avg=Avg('completion_percentage'))['avg'] or 0
         }
-        
-        # Project progress
+
         projects = obj.project_progresses.all()
         project_stats = {
             'total': projects.count(),
@@ -315,24 +409,22 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
             'in_progress': projects.filter(status='in_progress').count(),
             'avg_completion': projects.aggregate(avg=Avg('completion_percentage'))['avg'] or 0
         }
-        
-        # Task completion across all modules
+
         total_tasks = 0
         completed_tasks = 0
-        
         for module in modules:
             for topic in module.topic_progresses.all():
                 for subtopic in topic.subtopic_progresses.all():
                     tasks = subtopic.task_progresses.all()
                     total_tasks += tasks.count()
                     completed_tasks += tasks.filter(status='completed').count()
-        
+
         task_stats = {
             'total': total_tasks,
             'completed': completed_tasks,
             'completion_rate': (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
         }
-        
+
         return {
             'sprints': sprint_stats,
             'modules': module_stats,
@@ -346,70 +438,46 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
 
     def get_next_milestone(self, obj):
         """Get next milestone/deadline"""
-        # Find next incomplete sprint, module, or project
         next_sprint = obj.sprint_progresses.filter(
             status__in=['not_started', 'in_progress']
         ).first()
-        
+
         next_module = obj.module_progresses.filter(
             status__in=['not_started', 'in_progress']
         ).first()
-        
+
         next_project = obj.project_progresses.filter(
             status__in=['not_started', 'in_progress']
         ).first()
-        
+
         milestones = []
-        
         if next_sprint:
             milestones.append({
                 'type': 'sprint',
                 'name': next_sprint.sprint.name,
                 'due_date': getattr(next_sprint.sprint, 'end_date', None)
             })
-        
         if next_module:
             milestones.append({
                 'type': 'module',
                 'name': next_module.module.name,
                 'due_date': getattr(next_module.module, 'end_date', None)
             })
-        
         if next_project:
             milestones.append({
                 'type': 'project',
                 'name': next_project.project.name,
                 'due_date': getattr(next_project.project, 'due_date', None)
             })
-        
-        # Return the earliest milestone
+
         if milestones:
             milestones_with_dates = [m for m in milestones if m['due_date']]
             if milestones_with_dates:
                 return min(milestones_with_dates, key=lambda x: x['due_date'])
-            return milestones[0]  # Return first milestone if no dates
-        
+            return milestones[0]
+
         return None
-
-    def validate_status(self, value):
-        """Validate enrollment status transitions"""
-        if self.instance:
-            current_status = self.instance.status
-            valid_transitions = {
-                'pending': ['active', 'withdrawn'],
-                'active': ['paused', 'completed', 'withdrawn'],
-                'paused': ['active', 'withdrawn'],
-                'completed': [],  # No transitions from completed
-                'withdrawn': []   # No transitions from withdrawn
-            }
-            
-            if value not in valid_transitions.get(current_status, []):
-                raise serializers.ValidationError(
-                    f"Cannot transition from {current_status} to {value}"
-                )
-        
-        return value
-
+    
 
 class ProgressSummarySerializer(serializers.Serializer):
     """
