@@ -53,7 +53,7 @@ class SubTopicProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubTopicProgress
         fields = [
-            'id', 'subtopic', 'subtopic_name', 'subtopic_description',
+            'id', 'subtopic', 'subtopic_name', 'topic_progress', 'subtopic_description',
             'status', 'started_on', 'completed_on', 'updated_at',
             'task_progresses', 'tasks_completed', 'tasks_total', 'average_score'
         ]
