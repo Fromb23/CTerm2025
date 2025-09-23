@@ -1,4 +1,7 @@
+from django.http import JsonResponse
 from rest_framework import viewsets, status, permissions
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from django_fsm import TransitionNotAllowed
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,7 +10,10 @@ from django.db import transaction
 from django.db.models import Q, Count, Avg, F, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import datetime, timedelta
+from django.http import Http404
+from rest_framework.permissions import BasePermission
 
+from user.models.user_models import CustomUser
 from user.models.course_enrollment import (
     CourseEnrollment, SprintProgress, ModuleProgress, 
     TopicProgress, SubTopicProgress, TaskProgress, ProjectProgress
@@ -19,90 +25,200 @@ from user.serializers.enrollement_tracker_serializers import (
     ProjectProgressSerializer, ProgressSummarySerializer
 )
 
+class IsCustomAdmin(BasePermission):
+    """
+    Allows access only to users with user_type 'admin'.
+    """
+
+    def has_permission(self, request, view):
+        return bool(request.user and getattr(request.user, 'user_type', None) == 'admin')
+
 
 class CourseEnrollmentViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for managing course enrollments
+    ViewSet for mclass IsCustomAdmin(BasePermission):anaging course enrollments
     Handles enrollment creation, status updates, and progress tracking
     """
     serializer_class = CourseEnrollmentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_permissions(self):
+        if self.action in ['update_partial', 'partial_update']:
+            permission_classes = [IsCustomAdmin]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+
+        return [permission() for permission in permission_classes]
+
     def get_queryset(self):
-        if self.request.user.is_staff:
+        if self.request.user.user_type == 'admin':
             return CourseEnrollment.objects.all()
         return CourseEnrollment.objects.filter(user=self.request.user)
 
+    def list(self, request, *args, **kwargs):
+     """List enrollments - admin sees all, users see their own"""
+     try:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return Response({"data": serializer.data, "error": None}, status=status.HTTP_200_OK)
+     except PermissionDenied:
+            return Response({"data": None, "error": "You do not have permission to view these enrollments."},
+                        status=status.HTTP_403_FORBIDDEN)
+     except Exception as exc:
+        return Response({"data": None, "error": f"An unexpected error occurred: {str(exc)}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+     
+    def update_partial(self, request, *args, **kwargs):
+        """Partially update enrollment - only certain fields allowed"""
+
+        try:
+            instance = self.get_object()
+
+
+            if not self.check_enrollment_permission(instance):
+                raise Exception("You cannot modify this enrollment.")
+
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+
+            return Response({
+            "data": serializer.data,
+            "error": None
+        }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+            "data": None,
+            "error": str(e)
+        }, status=status.HTTP_403_FORBIDDEN)
+
+
+    def retrieve(self, request, *args, **kwargs):
+        """Retrieve a single enrollment with detailed progress"""
+        try:
+            data = self.get_object()
+            serializer = self.get_serializer(data)
+            return Response({"data": serializer.data, "error": None}, status=status.HTTP_200_OK)
+        except Http404:
+            return Response({"data": None, "error": "Enrollment not found."},
+                            status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            return Response({"data": None, "error": "You do not have permission to view this enrollment."},
+                            status=status.HTTP_403_FORBIDDEN)
+        except Exception as exc:
+            return Response({"data": None, "error": f"An unexpected error occurred: {str(exc)}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def get_serializer_context(self):
+        """Add request context for serializer validation"""
+        context = super().get_serializer_context()
+        context['user'] = self.request.user
+        return context
+
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        """Simplified - let serializer handle user assignment"""
+        serializer.save()
+
+    def check_enrollment_permission(self, enrollment):
+        """Check if user can modify this enrollment"""
+        user = self.request.user
+        if user.user_type == 'admin':
+            return True
+        return enrollment.user == user
 
     @action(detail=True, methods=['post'])
     def pause_enrollment(self, request, pk=None):
         """Pause an active enrollment"""
         enrollment = self.get_object()
-        if enrollment.status == 'active':
-            enrollment.status = 'paused'
-            enrollment.save()
+        
+        if not self.check_enrollment_permission(enrollment):
+            raise PermissionDenied("You can only modify your own enrollments")
+            
+        try:
+            # Use serializer for status validation
+            serializer = self.get_serializer(
+                enrollment, 
+                data={'status': 'paused'}, 
+                partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        
             return Response({'status': 'enrollment paused'})
-        return Response({'error': 'Can only pause active enrollments'}, 
-                       status=status.HTTP_400_BAD_REQUEST)
+        except TransitionNotAllowed as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as ve:
+            return Response({'error': ve.detail}, status=status.HTTP_400_BAD_REQUEST)
+
 
     @action(detail=True, methods=['post'])
     def resume_enrollment(self, request, pk=None):
         """Resume a paused enrollment"""
         enrollment = self.get_object()
-        if enrollment.status == 'paused':
-            enrollment.status = 'active'
-            enrollment.save()
+        
+        if not self.check_enrollment_permission(enrollment):
+            raise PermissionDenied("You can only modify your own enrollments")
+            
+        try:
+            # Use serializer for status validation
+            serializer = self.get_serializer(
+                enrollment, 
+                data={'status': 'active'}, 
+                partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
             return Response({'status': 'enrollment resumed'})
-        return Response({'error': 'Can only resume paused enrollments'},
-                       status=status.HTTP_400_BAD_REQUEST)
+        except TransitionNotAllowed as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as ve:
+            return Response({'error': ve.detail}, status=status.HTTP_400_BAD_REQUEST)
+        
 
     @action(detail=True, methods=['post'])
     def withdraw(self, request, pk=None):
         """Withdraw from course"""
         enrollment = self.get_object()
-        enrollment.status = 'withdrawn'
-        enrollment.is_active = False
-        enrollment.save()
-        return Response({'status': 'withdrawn from course'})
+        
+        if not self.check_enrollment_permission(enrollment):
+            raise PermissionDenied("You can only modify your own enrollments")
+            
+        try:
+            # Use serializer for status validation
+            serializer = self.get_serializer(
+                enrollment, 
+                data={'status': 'withdrawn'}, 
+                partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response({'status': 'enrollment withdrawn'})
+        except TransitionNotAllowed as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as ve:
+            return Response({'error': ve.detail}, status=status.HTTP_400_BAD_REQUEST)
+        
 
     @action(detail=True, methods=['get'])
     def progress_overview(self, request, pk=None):
-        """Get comprehensive progress overview for an enrollment"""
+        """Get comprehensive progress overview - delegate to serializer"""
         enrollment = self.get_object()
+        serializer = self.get_serializer(enrollment)
         
-        # Calculate sprint progress
-        sprint_stats = SprintProgress.objects.filter(enrollment=enrollment).aggregate(
-            total_sprints=Count('id'),
-            completed_sprints=Count('id', filter=Q(status='completed')),
-            in_progress_sprints=Count('id', filter=Q(status='in_progress'))
-        )
+        # Use serializer's progress calculation for consistency
+        progress_data = serializer.data['overall_progress']
         
-        # Calculate module progress
-        module_stats = ModuleProgress.objects.filter(enrollment=enrollment).aggregate(
-            total_modules=Count('id'),
-            completed_modules=Count('id', filter=Q(status='completed')),
-            avg_completion=Avg('completion_percentage')
-        )
-        
-        # Calculate project progress
-        project_stats = ProjectProgress.objects.filter(enrollment=enrollment).aggregate(
-            total_projects=Count('id'),
-            completed_projects=Count('id', filter=Q(status='completed')),
-            avg_completion=Avg('completion_percentage')
-        )
-
         return Response({
             'enrollment_id': enrollment.id,
             'overall_completion': enrollment.completion_percentage,
-            'sprint_progress': sprint_stats,
-            'module_progress': module_stats,
-            'project_progress': project_stats,
+            'sprint_progress': progress_data['sprints'],
+            'module_progress': progress_data['modules'],
+            'project_progress': progress_data['projects'],
+            'task_progress': progress_data['tasks'],
             'last_activity': enrollment.updated_at,
             'enrollment_status': enrollment.status
         })
-
+    
 
 class SprintProgressViewSet(viewsets.ModelViewSet):
     """
@@ -163,11 +279,22 @@ class ModuleProgressViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user.is_staff:
+        if self.request.user.user_type == 'admin':
+            if ModuleProgress.objects is None:
+                return ModuleProgress.objects.none()
             return ModuleProgress.objects.all()
         return ModuleProgress.objects.filter(enrollment__user=self.request.user)
 
-    @action(detail=True, methods=['post'])
+    def create(self, request, *args, **kwargs):
+        """Create module progress entry"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=True, methods=['patch'], url_path='update-progress')
     def update_progress(self, request, pk=None):
         """Update module completion percentage"""
         progress = self.get_object()

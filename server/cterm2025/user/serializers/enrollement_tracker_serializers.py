@@ -124,8 +124,9 @@ class ModuleProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ModuleProgress
         fields = [
-            'id', 'module', 'module_name', 'module_description', 
-            'module_duration', 'status', 'completion_percentage',
+            'id', 'enrollment', 'module',
+            'module_name', 'module_description', 'module_duration',
+            'status', 'completion_percentage',
             'started_on', 'completed_on', 'updated_at',
             'topic_progresses', 'progress_stats'
         ]
