@@ -349,9 +349,18 @@ class TopicProgressViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user.is_staff:
+        if self.request.user.user_type == 'admin':
             return TopicProgress.objects.all()
         return TopicProgress.objects.filter(module_progress__enrollment__user=self.request.user)
+    
+    def list(self, request, *args, **kwargs):
+        """List topic progresses with optional filtering by module"""
+        queryset = self.get_queryset()
+        if not queryset.exists():
+            return Response({"data": [], "error": None}, status=status.HTTP_200_OK)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"data": serializer.data, "error": None}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
     def complete_topic(self, request, pk=None):

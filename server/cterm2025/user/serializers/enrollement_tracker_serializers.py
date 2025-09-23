@@ -90,7 +90,7 @@ class TopicProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = TopicProgress
         fields = [
-            'id', 'topic', 'topic_name', 'topic_description',
+            'id', 'topic', 'topic_name', 'module_progress', 'topic_description',
             'status', 'started_on', 'completed_on', 'updated_at',
             'subtopic_progresses', 'completion_summary'
         ]
