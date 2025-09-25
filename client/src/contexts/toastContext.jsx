@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 const ToastContext = createContext();
 
@@ -6,7 +7,7 @@ export const ToastProvider = ({ children }) => {
 	const [toasts, setToasts] = useState([]);
 
 	const addToast = useCallback((message, type = 'info') => {
-		const id = Date.now();
+		const id = uuidv4();
 		setToasts(prev => [...prev, { id, message, type }]);
 		setTimeout(() => {
 			setToasts(prev => prev.filter(toast => toast.id !== id));
