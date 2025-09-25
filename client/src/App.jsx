@@ -22,11 +22,11 @@ const App = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
-    useEffect(() => {
+  useEffect(() => {
     dispatch(loadAuthFromStorage());
   }, [dispatch]);
 
-  const isAuthenticated = !!user;
+  const isAuthenticated = user ?? null;
 
   return (
     <Router>

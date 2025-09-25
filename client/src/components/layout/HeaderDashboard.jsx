@@ -13,7 +13,7 @@ import {
 import { useTheme } from "../../contexts/themeContext.jsx";
 import Button from "../ui/Button";
 import { useDispatch } from "react-redux";
-import { logoutState } from "../../redux/slices/loginSlice.js";
+import { logout } from "../../store/authSlice";
 
 const HeaderDashboard = ({ onToggleSidebar, sidebarOpen }) => {
   const dispatch = useDispatch();
@@ -43,7 +43,7 @@ const HeaderDashboard = ({ onToggleSidebar, sidebarOpen }) => {
   }, [location.pathname]);
 
   const handleLogout = () => {
-    dispatch(logoutState());
+    dispatch(logout());
   };
 
   return (
