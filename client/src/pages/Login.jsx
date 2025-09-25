@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useTheme } from '../contexts/themeContext.jsx';
+import { useToast } from '../contexts/toastContext';
+import { useLoginMutation } from '../services/endpoints/authApi';
+
 import Button from '../components/ui/Button';
-import Form from '../components/ui/Form';
-import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
-import { loginUser } from '../redux/actions/loginActions.js';
-import { loginState } from '../redux/slices/loginSlice.js';
-import { useToast } from "../contexts/toastContext";
+import Form from '../components/ui/Form';
+import Loading from '../components/ui/Loading.jsx';
 
 import {
 	FiArrowLeft,
@@ -19,25 +19,67 @@ import {
 	FiGithub,
 	FiSun,
 	FiMoon,
-	FiAlertCircle,
 	FiLoader
 } from 'react-icons/fi';
-import Loading from '../components/ui/Loading.jsx';
 
 const Login = () => {
-	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const dispatch = useDispatch();
 	const { addToast } = useToast();
 	const { isDark, setIsDark } = useTheme();
-	const [showPassword, setShowPassword] = useState(false);
-	const [isLoading, setIsLoading] = useState(false);
-	const [errors, setErrors] = useState({});
 
-	const [formData, setFormData] = useState({
-		email: '',
-		password: ''
-	});
-	const { user, loading, error, isAuthenticated } = useSelector((state) => state.login);
+	const [formData, setFormData] = useState({ email: '', password: '' });
+	const [errors, setErrors] = useState({});
+	const [showPassword, setShowPassword] = useState(false);
+
+	const [login, { isLoading }] = useLoginMutation();
+
+	useEffect(() => {
+		document.title = 'Login - cTerm2025';
+	}, []);
+
+	const handleInputChange = (e) => {
+		const { name, value } = e.target;
+		setFormData(prev => ({ ...prev, [name]: value }));
+		if (errors[name]) {
+			setErrors(prev => ({ ...prev, [name]: '' }));
+		}
+	};
+
+	const validateForm = (data) => {
+		const newErrors = {};
+
+		if (!data.email.trim()) {
+			newErrors.email = 'Email is required';
+		} else if (!/\S+@\S+\.\S+/.test(data.email)) {
+			newErrors.email = 'Please enter a valid email';
+		}
+
+		if (!data.password) {
+			newErrors.password = 'Password is required';
+		}
+
+		setErrors(newErrors);
+		return Object.keys(newErrors).length === 0;
+	};
+
+	const handleSubmit = async (formData) => {
+		if (!validateForm(formData)) return;
+
+		try {
+			const result = await login(formData).unwrap();
+
+			addToast("Login successful!", "success");
+			navigate("/dashboard");
+		} catch (err) {
+			const message = err?.data?.detail || "Login failed. Please try again.";
+			addToast(message, "error");
+		}
+	};
+
+	const toggleDarkMode = () => setIsDark(prev => !prev);
+
+	const handleGitHubAuth = () => console.log('GitHub OAuth triggered');
 
 	const fields = [
 		{
@@ -65,60 +107,7 @@ const Login = () => {
 		},
 	];
 
-	const toggleDarkMode = () => {
-		setIsDark(prev => !prev);
-	};
-
-	const handleInputChange = (e) => {
-		const { name, value } = e.target;
-		setFormData(prev => ({ ...prev, [name]: value }));
-		if (errors[name]) {
-			setErrors(prev => ({ ...prev, [name]: '' }));
-		}
-	};
-
-	const validateForm = (data) => {
-		const newErrors = {};
-
-		if (!data.email.trim()) {
-			newErrors.email = 'Email is required';
-		} else if (!/\S+@\S+\.\S+/.test(data.email)) {
-			newErrors.email = 'Please enter a valid email';
-		}
-
-		if (!data.password) {
-			newErrors.password = 'Password is required';
-		}
-
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
-	};
-	useEffect(() => {
-		if (user && isAuthenticated) {
-			addToast("Login successful!", "success");
-			navigate("/dashboard");
-		}
-		if (error) {
-			const message = typeof error === "string"
-				? error
-				: error?.detail || "Login failed. Please try again.";
-			addToast(message, "error");
-			dispatch(loginState());
-		}
-
-	}, [user, isAuthenticated, error, dispatch, addToast]);
-
-	const handleSubmit = (formData) => {
-		if (!validateForm(formData)) return;
-		dispatch(loginUser(formData));
-	}
-
-	const handleGitHubAuth = () => {
-		console.log('GitHub authentication triggered');
-		// GitHub OAuth integration would go here
-	};
-
-	if (loading) return <Loading message="Signing in..." />;
+	if (isLoading) return <Loading message="Signing in..." />;
 
 	return (
 		<div className={`${isDark ? 'dark' : ''}`}>
