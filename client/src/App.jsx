@@ -13,6 +13,8 @@ const Signup = lazy(() => import('./pages/Signup'));
 const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./components/layout/Dashboard'));
 const CourseManagement = lazy(() => import("./pages/courseManagement/CourseManagement"));
+const CourseDetails = lazy(() => import("./pages/courseManagement/CourseDetails"));
+const EnrollmentManagement = lazy(() => import("./pages/courseManagement/EnrollmentManagement"));
 
 const Loader = () => (
   <Loading />
@@ -75,10 +77,14 @@ const App = () => {
           }
         >
           <Route index element={<h1>Welcome to Dashboard</h1>} />
-          <Route path="courses" element={<CourseManagement />} />
+          <Route path="courses/" element={<CourseManagement />}>
+
+          </Route>
         </Route>
         <Route path="/result" element={<CheckerResult />} />
         <Route path="/checker-submission" element={<CheckerSubmission />} />
+        <Route path="dashboard/courses/:courseId" element={<CourseDetails />} />
+        <Route path="/dashboard/courses/:courseId/enrollments" element={<EnrollmentManagement />} />
 
       </Routes>
     </Router>
