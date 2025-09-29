@@ -5,12 +5,13 @@ export const baseApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: "http://localhost:8000/api",
     prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.token; // adjust depending on your auth slice
+      const token = getState().auth?.token;
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
       return headers;
     },
   }),
+  tagTypes: ["Courses", "Users", "Enrollments"],
   endpoints: () => ({}),
 });

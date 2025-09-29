@@ -1,4 +1,4 @@
-import checkerApi from '../api/checkeApi';
+// import checkerApi from '../api/checkeApi';
 
 export const validateTask = async (taskName, repoUrl) => {
   const response = await checkerApi.post('/validate/', {
