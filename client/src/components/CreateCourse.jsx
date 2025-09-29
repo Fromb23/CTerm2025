@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { useCreateCourseMutation } from "../services/endpoints/courseApi";
 
 const CreateCourse = ({
 	showCreateCourseModal,
@@ -10,10 +11,37 @@ const CreateCourse = ({
 	removeFaqEntry,
 	setShowCreateCourseModal,
 	resetCourseForm,
-	handleCreateCourse,
-	loading
+	Loading
 }) => {
-	if (!showCreateCourseModal) return null; // 🔥 Early return for cleaner rendering
+	const [createCourse] = useCreateCourseMutation();
+	if (!showCreateCourseModal) return null;
+
+	const handleCreateCourse = async () => {
+  try {
+    // Prepare data with correct types
+    const courseData = {
+      name: courseFormData.name,
+      course_code: courseFormData.course_code || null,
+      duration: parseInt(courseFormData.duration, 10),
+      mode_of_learning: courseFormData.mode_of_learning,
+      commitment_time: parseInt(courseFormData.commitment_time, 10),
+      requirements: courseFormData.requirements || null,
+      description: courseFormData.description || null,
+      frequently_asked_questions: courseFormData.frequently_asked_questions || {},
+      start_date: courseFormData.start_date 
+        ? `${courseFormData.start_date}T00:00:00Z` 
+        : null,
+      is_published: courseFormData.is_published === true || 
+                    courseFormData.is_published === 'true'
+    };    
+    await createCourse(courseData).unwrap();
+    
+    resetCourseForm();
+    setShowCreateCourseModal(false);
+  } catch (error) {
+    console.error('Failed to create course:', error);
+  }
+};
 
 	return (
 		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -276,10 +304,10 @@ const CreateCourse = ({
 							<button
 								type="button"
 								onClick={handleCreateCourse}
-								disabled={loading}
+								disabled={Loading}
 								className="px-6 py-3 button-primary rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 							>
-								{loading ? "Creating..." : "Create Course"}
+								{Loading ? "Creating..." : "Create Course"}
 							</button>
 						</div>
 					</div>
