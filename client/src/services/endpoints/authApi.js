@@ -1,6 +1,6 @@
-import { enhancedBaseApi } from "../enhancedBaseApi";
+import { baseApi } from "../baseApi";
 
-export const authApi = enhancedBaseApi.injectEndpoints({
+export const authApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		login: builder.mutation({
 			query: (credentials) => {
@@ -13,16 +13,13 @@ export const authApi = enhancedBaseApi.injectEndpoints({
 		}),
 		register: builder.mutation({
 			query: (data) => ({
-				url: "/auth/register",
+				url: "/auth/register/",
 				method: "POST",
 				body: data,
 			}),
-		}),
-		me: builder.query({
-			query: () => "/auth/me",
 		}),
 	}),
 	overrideExisting: false,
 });
 
-export const { useLoginMutation, useRegisterMutation, useMeQuery } = authApi;
+export const { useLoginMutation, useRegisterMutationd } = authApi;
