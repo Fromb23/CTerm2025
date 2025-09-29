@@ -17,31 +17,31 @@ const CreateCourse = ({
 	if (!showCreateCourseModal) return null;
 
 	const handleCreateCourse = async () => {
-  try {
-    // Prepare data with correct types
-    const courseData = {
-      name: courseFormData.name,
-      course_code: courseFormData.course_code || null,
-      duration: parseInt(courseFormData.duration, 10),
-      mode_of_learning: courseFormData.mode_of_learning,
-      commitment_time: parseInt(courseFormData.commitment_time, 10),
-      requirements: courseFormData.requirements || null,
-      description: courseFormData.description || null,
-      frequently_asked_questions: courseFormData.frequently_asked_questions || {},
-      start_date: courseFormData.start_date 
-        ? `${courseFormData.start_date}T00:00:00Z` 
-        : null,
-      is_published: courseFormData.is_published === true || 
-                    courseFormData.is_published === 'true'
-    };    
-    await createCourse(courseData).unwrap();
-    
-    resetCourseForm();
-    setShowCreateCourseModal(false);
-  } catch (error) {
-    console.error('Failed to create course:', error);
-  }
-};
+		try {
+			// Prepare data with correct types
+			const courseData = {
+				name: courseFormData.name,
+				course_code: courseFormData.course_code || null,
+				duration: parseInt(courseFormData.duration, 10),
+				mode_of_learning: courseFormData.mode_of_learning,
+				commitment_time: parseInt(courseFormData.commitment_time, 10),
+				requirements: courseFormData.requirements || null,
+				description: courseFormData.description || null,
+				frequently_asked_questions: courseFormData.frequently_asked_questions || {},
+				start_date: courseFormData.start_date
+					? `${courseFormData.start_date}T00:00:00Z`
+					: null,
+				is_published: courseFormData.is_published === true ||
+					courseFormData.is_published === 'true'
+			};
+			await createCourse(courseData).unwrap();
+
+			resetCourseForm();
+			setShowCreateCourseModal(false);
+		} catch (error) {
+			console.error('Failed to create course:', error);
+		}
+	};
 
 	return (
 		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
