@@ -32,7 +32,7 @@ const Sidebar = ({
 	const studentLinks = [
 		{ name: "Dashboard", path: "/dashboard", icon: <FiHome /> },
 		{ name: "My Courses", path: "/courses", icon: <FiBook /> },
-		{ name: "Community", path: "/community", icon: <FiUsers /> },
+		{ name: "Community", path: "/user-management", icon: <FiUsers /> },
 		{ name: "Reports", path: "/reports", icon: <FiBarChart2 /> },
 		{ name: "Settings", path: "/settings", icon: <FiSettings /> },
 	];
@@ -40,7 +40,7 @@ const Sidebar = ({
 	const adminLinks = [
 		permissions.view_grades && { name: "Grades", path: "/admin/grades", icon: <FiFileText /> },
 		permissions.edit_courses && { name: "Courses", path: "/dashboard/courses", icon: <FiBook /> },
-		permissions.manage_users && { name: "Users", path: "/admin/users", icon: <FiUser /> },
+		permissions.manage_users && { name: "Users", path: "/dashboard/user-management", icon: <FiUser /> },
 		permissions.manage_roles && { name: "Roles", path: "/admin/roles", icon: <FiShield /> },
 		permissions.view_reports && { name: "Reports", path: "/admin/reports", icon: <FiBarChart2 /> },
 		permissions.manage_content && { name: "Content", path: "/admin/content", icon: <FiEdit /> },

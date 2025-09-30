@@ -1,6 +1,5 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { loadAuthFromStorage } from './store/authSlice';
 import CheckerResult from './pages/CheckerResult';
 import CheckerSubmission from './pages/CheckerSubmission';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -15,18 +14,15 @@ const Dashboard = lazy(() => import('./components/layout/Dashboard'));
 const CourseManagement = lazy(() => import("./pages/courseManagement/CourseManagement"));
 const CourseDetails = lazy(() => import("./pages/courseManagement/CourseDetails"));
 const EnrollmentManagement = lazy(() => import("./pages/courseManagement/EnrollmentManagement"));
+const UserManagement = lazy(() => import("./pages/userManagement/userManagement"));
 
 const Loader = () => (
   <Loading />
 );
 
 const App = () => {
-  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    dispatch(loadAuthFromStorage());
-  }, [dispatch]);
 
   const isAuthenticated = user ?? null;
 
@@ -85,6 +81,8 @@ const App = () => {
         <Route path="/checker-submission" element={<CheckerSubmission />} />
         <Route path="dashboard/courses/:courseId" element={<CourseDetails />} />
         <Route path="/dashboard/courses/:courseId/enrollments" element={<EnrollmentManagement />} />
+
+        <Route path="/dashboard/user-management" element={<UserManagement />} />
 
       </Routes>
     </Router>
