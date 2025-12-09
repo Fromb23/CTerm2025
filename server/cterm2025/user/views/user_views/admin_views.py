@@ -148,7 +148,6 @@ def update_admin_view(request, admin_id):
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_admin_view(request, admin_id):
-    print( admin_id )
     if not admin_id:
         return JsonResponse({"status": "error", "message": "Admin ID is required"}, status=400)
 

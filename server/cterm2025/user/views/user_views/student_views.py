@@ -114,7 +114,7 @@ def update_student_view(request, student_id):
     
     data = json.loads(request.body)
 
-    user = CustomUser.objects.filter(id=student_id, role="student").first()
+    user = CustomUser.objects.filter(id=student_id, user_type="student").first()
     if not user:
         return JsonResponse({"error": "Student not found"}, status=404)
     
@@ -143,7 +143,7 @@ def delete_student_view(request, student_id):
         return JsonResponse({"error": "Student ID is required"}, status=400)
 
     try:
-        user = CustomUser.objects.get(id=student_id, role="student")
+        user = CustomUser.objects.get(id=student_id, user_type="student")
         user.delete()
         return JsonResponse({"status": "success", "message": "Student deleted successfully"}, status=200)
     except CustomUser.DoesNotExist:
