@@ -4,9 +4,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 import json
+import logging
 from django.utils.dateparse import parse_date
 from django.db import transaction
 from user.models.course_model import Sprint, Course
+
+logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @transaction.atomic
@@ -51,7 +54,7 @@ def create_sprint_view(request, course_id):
 			"is_active": sprint.is_active,
 		}}, status=201)
 	except Exception as e:
-		print("Error creating sprint:", e)
+		logger.error(f"Error creating sprint: {e}")
 		return JsonResponse({"error": str(e)}, status=500)
 
 @api_view(["GET"])
