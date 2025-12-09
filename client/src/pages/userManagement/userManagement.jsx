@@ -450,7 +450,7 @@ const UserManagement = () => {
                               <div className="flex flex-wrap gap-2">
                                 {typeof selectedUser.permissions[category] === 'object' ? (
                                   Object.entries(selectedUser.permissions[category])
-                                    .filter(([_, value]) => value)
+                                    .filter(([, value]) => value)
                                     .map(([perm]) => (
                                       <span key={perm} className="px-2 py-1 bg-success rounded text-xs">
                                         {perm.replace(/_/g, ' ')}
